@@ -1,0 +1,32 @@
+account: "account_name" # Account name for the cluster
+path_to_input: "path_to_input_file" # Path to the input file with the list of servers
+path_to_output_folder: "path_to_output_folder" # Path to the output folder
+
+scripts:
+  # Wrapper scripts to submit jobs to the cluster
+  tools_submitter: "path_to_tools_submitter_script.sh"
+  # tools scripts
+  tools_filter_script: "path_to_tools_filter_script.slurm"
+  tools_scheduling_script: "path_to_tools_scheduling_script.slurm"
+  tools_worker_script: "path_to_tools_worker_script.slurm"
+  tools_verification_script: "path_to_tools_verification_script.slurm"
+
+
+# Structure of the output folder that will be created automatically
+output_structure:
+  urls_folder: "servers_batched" # Folder where the servers will be split into batches
+  logs_folder: "logs" # Folder for the logs
+  images_folder: "downloaded_images" # Folder for the downloaded images
+  schedules_folder: "schedules" # Folder for the schedules
+  profiles_table: "servers_profiles.csv" # Table with the servers profiles
+  ignored_table: "ignored_servers.csv" # Table with the servers that were ignored, you can find an example in examples/ignored_servers.csv
+  inner_checkpoint_file: "inner_checkpoint.yaml" # Inner checkpoint file
+  tools_folder: "tools" # Folder for the tools
+
+tools_parameters:
+  num_workers: 0
+  max_nodes: 0
+  workers_per_node: 0
+  cpu_per_worker: 0
+  threshold_size: 224 # Threshold size for the images, images with size less than this value will filtered out
+  new_resize_size: 720 # New size for the images in resize tool
