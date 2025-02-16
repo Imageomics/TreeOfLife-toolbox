@@ -1,0 +1,40 @@
+import argparse
+import os
+
+import pandas as pd
+
+from DD_tools.main.checkpoint import Checkpoint
+from DD_tools.main.config import Config
+from DD_tools.main.runners import MPIRunnerTool
+from DD_tools.main.utils import init_logger
+
+if __name__ == "__main__":
+    config_path = os.environ.get("CONFIG_PATH")
+    if config_path is None:
+        raise ValueError("CONFIG_PATH not set")
+
+    config = Config.from_path(config_path, "tools")
+    logger = init_logger(__name__)
+
+    parser = argparse.ArgumentParser(description='Running step of the Tool')
+    parser.add_argument("seq_id", metavar="seq_id", type=int,
+                        help="the name of the tool that is intended to be used")
+    _args = parser.parse_args()
+    tool_name = "transfer_and_type_change"
+    seq_id = _args.seq_id
+
+    tool_folder = os.path.join(config.get_folder("tools_folder"), tool_name, str(seq_id).zfill(4))
+    checkpoint = Checkpoint.from_path(os.path.join(tool_folder, "tool_checkpoint.yaml"), {"completed": False})
+    schedule_df = pd.read_csv(os.path.join(tool_folder, "schedule.csv"))
+    verification_df = MPIRunnerTool.load_table(os.path.join(tool_folder, "verification"),
+                                               ["source", "server", "file_name"])
+
+    outer_join = schedule_df.merge(verification_df, how='outer', indicator=True, on=["source", "server", "file_name"])
+    left = outer_join[(outer_join["_merge"] == 'left_only')].drop('_merge', axis=1)
+
+    if len(left) == 0:
+        checkpoint["completed"] = True
+
+        logger.info("Tool completed its job")
+    else:
+        logger.info(f"Tool needs more time, left to complete: {len(left)}")
