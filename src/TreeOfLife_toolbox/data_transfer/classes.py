@@ -17,12 +17,42 @@ from TreeOfLife_toolbox.main.utils import ensure_created
 
 @FilterRegister("data_transfer")
 class DataTransferFilter(PythonFilterToolBase):
+    """
+    A filter class for data transfer operations.
+
+    This class is responsible for identifying parquet files that need to be transferred
+    from a source location to a destination location. It handles both successful downloads
+    ('successes.parquet') and error files ('errors.parquet').
+
+    The class generates unique destination paths for each file based on the server name and
+    a randomly generated UUID to ensure uniqueness.
+    """
+
     def __init__(self, cfg: Config):
+        """
+        Initialize the DataTransferFilter.
+
+        Args:
+            cfg (Config): Configuration object containing settings for the data transfer process.
+        """
         super().__init__(cfg)
 
         self.filter_name: str = "data_transfer"
 
     def get_all_paths_to_merge(self) -> pd.DataFrame:
+        """
+        Identify all parquet files that need to be transferred and generate their destination paths.
+
+        This method:
+        1. Finds all completed partitions in the source directory
+        2. Extracts server names and file types (successes or errors)
+        3. Generates unique destination paths for each file
+        4. Ensures destination directories exist
+
+        Returns:
+            pd.DataFrame: DataFrame containing source and destination paths for each file to be transferred.
+                          Columns: ['src_path', 'dst_path']
+        """
         glob_wildcard = self.downloaded_images_path + "/*/*"
         server_name_regex = (
             rf"{self.downloaded_images_path}/server_name=(.*)/partition_id=.*"
@@ -72,12 +102,38 @@ class DataTransferFilter(PythonFilterToolBase):
 
 @SchedulerRegister("data_transfer")
 class DataTransferScheduleCreation(DefaultScheduler):
+    """
+    Scheduler class for data transfer operations.
+
+    This class is responsible for creating a schedule for data transfer operations
+    by combining all filter tables into a single schedule file. The schedule file
+    contains information about which files need to be transferred and where they
+    should be transferred to.
+    """
     def __init__(self, cfg: Config):
+        """
+        Initialize the DataTransferScheduleCreation.
+
+        Args:
+            cfg (Config): Configuration object containing settings for the scheduler.
+        """
         super().__init__(cfg)
 
         self.filter_name: str = "data_transfer"
 
     def run(self):
+        """
+        Execute the scheduler to create a combined schedule file.
+
+        This method:
+        1. Verifies that the filter name is set
+        2. Reads all CSV files from the filter table directory
+        3. Combines them into a single DataFrame
+        4. Writes the combined DataFrame to a schedule file
+
+        Raises:
+            ValueError: If filter_name is not set.
+        """
         assert self.filter_name is not None, ValueError("filter name is not set")
 
         filter_folder = os.path.join(self.tools_path, self.filter_name)
@@ -93,7 +149,21 @@ class DataTransferScheduleCreation(DefaultScheduler):
 
 @RunnerRegister("data_transfer")
 class DataTransferRunner(MPIRunnerTool):
+    """
+    Runner class for executing data transfer operations.
+
+    This class is responsible for the actual file transfer process. It uses MPI for 
+    parallel execution to efficiently copy files from source to destination locations.
+    The class also verifies the integrity of copied files by computing and comparing 
+    MD5 hashsums of source and destination files.
+    """
     def __init__(self, cfg: Config):
+        """
+        Initialize the DataTransferRunner.
+
+        Args:
+            cfg (Config): Configuration object containing settings for the runner.
+        """
         super().__init__(cfg)
 
         self.mpi_comm = None
@@ -106,12 +176,33 @@ class DataTransferRunner(MPIRunnerTool):
             "hashsum_src",
             "hashsum_dst",
         ]
-        self.total_time = 60
+        self.total_time = 60  # Maximum execution time in seconds
 
     def get_schedule(self) -> pd.DataFrame:
+        """
+        Load the schedule file created by the scheduler.
+
+        Returns:
+            pd.DataFrame: DataFrame containing the schedule information with source and destination paths.
+        """
         return pd.read_csv(os.path.join(self.filter_folder, "schedule.csv"))
 
     def get_remaining_table(self, schedule: pd.DataFrame) -> pd.DataFrame:
+        """
+        Determine which files still need to be copied by comparing the schedule with already verified transfers.
+
+        This method:
+        1. Loads the verification table containing information about already copied files
+        2. Performs an outer join between the schedule and verification table
+        3. Filters for files that are only in the schedule (not yet copied)
+
+        Args:
+            schedule (pd.DataFrame): DataFrame containing the full schedule of files to copy.
+
+        Returns:
+            pd.DataFrame: DataFrame containing only the files that still need to be copied.
+                          Columns: ['src_path', 'dst_path']
+        """
         verification_df = self.load_table(
             self.verification_folder, self.verification_scheme
         )
@@ -125,6 +216,18 @@ class DataTransferRunner(MPIRunnerTool):
 
     @staticmethod
     def correct_server_name(server_names: List[str]) -> List[str]:
+        """
+        Replace special characters in server names with underscores.
+
+        This method specifically replaces '%3A' (URL-encoded colon) with underscores
+        to ensure valid directory names.
+
+        Args:
+            server_names (List[str]): List of server names to be corrected.
+
+        Returns:
+            List[str]: List of corrected server names.
+        """
         for i, server in enumerate(server_names):
             server_names[i] = server.replace("%3A", "_")
 
@@ -133,6 +236,21 @@ class DataTransferRunner(MPIRunnerTool):
     def ensure_all_servers_exists(
         self, all_files_df: pd.DataFrame, dst_paths: Sequence[str]
     ) -> None:
+        """
+        Ensure that destination directories for all servers exist.
+
+        This method:
+        1. Extracts unique server names from the source paths
+        2. Corrects server names by replacing special characters
+        3. Creates destination directories for each server in each destination path
+
+        Args:
+            all_files_df (pd.DataFrame): DataFrame containing source paths with server information.
+            dst_paths (Sequence[str]): List of destination base paths where server directories should be created.
+
+        Returns:
+            None
+        """
         server_name_regex = (
             rf"{self.downloaded_images_path}/server_name=(.*)/partition_id=.*"
         )
@@ -151,9 +269,21 @@ class DataTransferRunner(MPIRunnerTool):
 
     @staticmethod
     def compute_hashsum(file_path: str, hashsum_alg) -> str:
+        """
+        Compute a hashsum for a file using the provided hash algorithm.
+
+        This method reads the file in chunks to efficiently handle large files.
+
+        Args:
+            file_path (str): Path to the file for which to compute the hashsum.
+            hashsum_alg: Hash algorithm object (e.g., from hashlib) to use for computing the hashsum.
+
+        Returns:
+            str: Hexadecimal digest of the computed hashsum.
+        """
         with open(file_path, "rb") as f:
             while True:
-                data = f.read(131_072)
+                data = f.read(131_072)  # Read in 128KB chunks
                 if not data:
                     break
                 hashsum_alg.update(data)
@@ -162,6 +292,27 @@ class DataTransferRunner(MPIRunnerTool):
     def copy_file(
         self, row: Tuple[pd.Index, pd.Series]
     ) -> Tuple[bool, str, str, str, str]:
+        """
+        Copy a file from source to destination and verify integrity with hashsums.
+
+        This method:
+        1. Computes the MD5 hashsum of the source file
+        2. Copies the file to the destination
+        3. Computes the MD5 hashsum of the destination file
+        4. Periodically checks if there's enough time left to continue execution
+
+        Args:
+            row (Tuple[pd.Index, pd.Series]): A tuple containing the index and a Series with 
+                                              'src_path' and 'dst_path' columns.
+
+        Returns:
+            Tuple[bool, str, str, str, str]: A tuple containing:
+                - bool: True if an error occurred, False otherwise
+                - str: Source path
+                - str: Destination path or error message if an error occurred
+                - str: Source file hashsum (empty if error)
+                - str: Destination file hashsum (empty if error)
+        """
         src_path = row[1]["src_path"]
         dst_path = row[1]["dst_path"]
         try:
@@ -183,6 +334,23 @@ class DataTransferRunner(MPIRunnerTool):
             return True, src_path, str(e), "", ""
 
     def run(self):
+        """
+        Execute the data transfer process.
+
+        This method:
+        1. Loads the schedule of files to be copied
+        2. Determines which files still need to be copied
+        3. Ensures all necessary destination directories exist
+        4. Uses MPI to parallelize the file copying process
+        5. Records verification information for successfully copied files
+        6. Logs errors for failed copy operations
+
+        The method uses MPI for parallel execution to efficiently process multiple files
+        simultaneously across available compute resources.
+
+        Returns:
+            None
+        """
         from mpi4py.futures import MPIPoolExecutor
 
         self.ensure_folders_created()
