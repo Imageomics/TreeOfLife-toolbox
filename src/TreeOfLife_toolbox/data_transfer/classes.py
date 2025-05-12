@@ -3,18 +3,16 @@ import hashlib
 import os
 import shutil
 import uuid
-from typing import List, Tuple
+from typing import List, Tuple, Sequence
 
 import numpy as np
 import pandas as pd
 
-from DD_tools.main.config import Config
-from DD_tools.main.filters import PythonFilterToolBase, FilterRegister
-from DD_tools.main.runners import MPIRunnerTool, RunnerRegister
-from DD_tools.main.schedulers import DefaultScheduler, SchedulerRegister
-from DD_tools.main.utils import ensure_created
-
-dst_folder = "/fs/ess/PAS2136/TreeOfLife/data/source=lila-bc-multi-label"
+from TreeOfLife_toolbox.main.config import Config
+from TreeOfLife_toolbox.main.filters import PythonFilterToolBase, FilterRegister
+from TreeOfLife_toolbox.main.runners import MPIRunnerTool, RunnerRegister
+from TreeOfLife_toolbox.main.schedulers import DefaultScheduler, SchedulerRegister
+from TreeOfLife_toolbox.main.utils import ensure_created
 
 
 @FilterRegister("data_transfer")
@@ -32,7 +30,8 @@ class DataTransferFilter(PythonFilterToolBase):
         basename_regex = (
             rf"{self.downloaded_images_path}/server_name=.*/partition_id=.*/(.*)"
         )
-        os.makedirs(dst_folder, exist_ok=True)
+        os.makedirs(self.config["dst_image_folder"], exist_ok=True)
+        os.makedirs(self.config["dst_error_folder"], exist_ok=True)
 
         src_paths = []
 
@@ -50,18 +49,23 @@ class DataTransferFilter(PythonFilterToolBase):
             "%3A", "_"
         )
         src_paths_df["basename"] = src_paths_df["src_path"].str.extract(basename_regex)
+        src_paths_df["dst_base_folder"] = np.where(
+            src_paths_df["basename"] == "successes.parquet",
+            self.config["dst_image_folder"],
+            self.config["dst_error_folder"],
+        )
         src_paths_df["dst_basename"] = np.where(
             src_paths_df["basename"] == "successes.parquet", "data_", "errors_"
         )
         src_paths_df["uuid"] = src_paths_df.apply(lambda _: str(uuid.uuid4()), axis=1)
         src_paths_df["dst_path"] = (
-                dst_folder
-                + "/server="
-                + src_paths_df["corrected_server_name"]
-                + "/"
-                + src_paths_df["dst_basename"]
-                + src_paths_df["uuid"]
-                + ".parquet"
+            src_paths_df["dst_base_folder"]
+            + "/server="
+            + src_paths_df["corrected_server_name"]
+            + "/"
+            + src_paths_df["dst_basename"]
+            + src_paths_df["uuid"]
+            + ".parquet"
         )
         return src_paths_df[["src_path", "dst_path"]]
 
@@ -127,7 +131,7 @@ class DataTransferRunner(MPIRunnerTool):
         return server_names
 
     def ensure_all_servers_exists(
-            self, all_files_df: pd.DataFrame, dst_path: str
+        self, all_files_df: pd.DataFrame, dst_paths: Sequence[str]
     ) -> None:
         server_name_regex = (
             rf"{self.downloaded_images_path}/server_name=(.*)/partition_id=.*"
@@ -140,9 +144,10 @@ class DataTransferRunner(MPIRunnerTool):
             server_names_series.drop_duplicates().reset_index(drop=True).to_list()
         )
         server_names = self.correct_server_name(server_names)
-        ensure_created(
-            [os.path.join(dst_path, f"server={server}") for server in server_names]
-        )
+        for dst_path in dst_paths:
+            ensure_created(
+                [os.path.join(dst_path, f"server={server}") for server in server_names]
+            )
 
     @staticmethod
     def compute_hashsum(file_path: str, hashsum_alg) -> str:
@@ -155,7 +160,7 @@ class DataTransferRunner(MPIRunnerTool):
         return hashsum_alg.hexdigest()
 
     def copy_file(
-            self, row: Tuple[pd.Index, pd.Series]
+        self, row: Tuple[pd.Index, pd.Series]
     ) -> Tuple[bool, str, str, str, str]:
         src_path = row[1]["src_path"]
         dst_path = row[1]["dst_path"]
@@ -188,16 +193,19 @@ class DataTransferRunner(MPIRunnerTool):
             exit(0)
 
         remaining_table = self.get_remaining_table(schedule)
-        self.ensure_all_servers_exists(remaining_table, dst_folder)
+        self.ensure_all_servers_exists(
+            remaining_table,
+            [self.config["dst_image_folder"], self.config["dst_error_folder"]],
+        )
 
         self.logger.info("Started copying")
         self.logger.info(f"{len(remaining_table)} files left to copy")
         with self.get_csv_writer(
-                f"{self.verification_folder}/verification.csv", self.verification_scheme
+            f"{self.verification_folder}/verification.csv", self.verification_scheme
         ) as verification_file:
             with MPIPoolExecutor() as executor:
                 for is_error, src, dst, hs_src, hs_dest in executor.map(
-                        self.copy_file, remaining_table.iterrows()
+                    self.copy_file, remaining_table.iterrows()
                 ):
                     if is_error:
                         self.logger.error(f"Error {dst} for {src}")
