@@ -1,15 +1,16 @@
 import argparse
 import os
 from logging import Logger
+from pathlib import Path
 from typing import Dict, List, Optional, TextIO, Tuple
 
 import pandas as pd
 from attr import Factory, define, field
 
-from DD_tools.main.checkpoint import Checkpoint
-from DD_tools.main.config import Config
-from DD_tools.main.registry import ToolsRegistryBase
-from DD_tools.main.utils import (
+from TreeOfLife_toolbox.main.checkpoint import Checkpoint
+from TreeOfLife_toolbox.main.config import Config
+from TreeOfLife_toolbox.main.registry import ToolsRegistryBase
+from TreeOfLife_toolbox.main.utils import (
     init_logger,
     ensure_created,
     truncate_paths,
@@ -78,6 +79,7 @@ class Tools:
 
     def __init_environment(self) -> None:
         os.environ["CONFIG_PATH"] = self.config.config_path
+        os.environ["TOOLBOX_PATH"] = str(Path(__file__).parent.parent.resolve())
 
         os.environ["ACCOUNT"] = self.config["account"]
         os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]

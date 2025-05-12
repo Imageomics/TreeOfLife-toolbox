@@ -19,11 +19,10 @@ executor_memory="64G"
 module load spark/3.4.1
 module load miniconda3/23.3.1-py310
 source "${REPO_ROOT}/.venv/bin/activate"
-export PYTHONPATH=${PYTHONPATH}:"${REPO_ROOT}/src":"${REPO_ROOT}/distributed-downloader"
 
 pbs-spark-submit \
     --driver-memory $driver_memory \
     --executor-memory $executor_memory \
-    "${REPO_ROOT}/src/distributed_downloader/tools/filter.py" \
+    "${TOOLBOX_PATH}/main/filter.py" \
     "${tool_name}" \
     > "${logs_dir}/tool_filter.log"
