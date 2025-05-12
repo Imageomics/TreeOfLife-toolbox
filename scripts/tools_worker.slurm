@@ -19,7 +19,6 @@ module load miniconda3/23.3.1-py310
 source "${REPO_ROOT}/.venv/bin/activate"
 export PYARROW_IGNORE_TIMEZONE=1
 export I_MPI_JOB_RESPECT_PROCESS_PLACEMENT=0
-export PYTHONPATH=${PYTHONPATH}:"${REPO_ROOT}/src":"${REPO_ROOT}/distributed-downloader"
 
 srun \
   --mpi=pmi2 \
@@ -28,4 +27,4 @@ srun \
   --cpus-per-task="$TOOLS_CPU_PER_WORKER" \
   --mem=0 \
   --output="${logs_dir}/tool_worker-%2t.log" \
-  python "${REPO_ROOT}/src/distributed_downloader/tools/runner.py" "${tool_name}"
+  python "${TOOLBOX_PATH}/main/runner.py" "${tool_name}"
