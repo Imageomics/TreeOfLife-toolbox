@@ -13,11 +13,14 @@ authors = [
     { name = "Elizabeth G. Campolongo", email = "e.campolongo479@gmail.com" },
     { name = "Matthew J. Thompson", email = "thompson.m.j@outlook.com" },
 ]
-description = "A tool for downloading files from a list of URLs in parallel."
+description = "A tool for processing datasets that was downloaded using the distributed-downloader package."
 readme = "README.md"
 requires-python = ">=3.10, <3.12"
 classifiers = [
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
@@ -52,19 +55,26 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = [
+    "pytest",
+    "ruff"
+]
 
 keywords = [
     "parallel",
     "distributed",
-    "download",
     "url",
+    "mpi-applications",
+    "dataset-generation",
 ]
 
 [project.urls]
 Homepage = "https://github.com/Imageomics/distributed-downloader"
 Repository = "https://github.com/Imageomics/distributed-downloader.git"
 "Bug Tracker" = "https://github.com/Imageomics/distributed-downloader/issues"
+
+[project.scripts]
+tree_of_life_toolbox = "TreeOfLife_toolbox.main.main:main"
 
 [tool.hatch.version]
 path = "src/TreeOfLife_toolbox/main/__about__.py"
