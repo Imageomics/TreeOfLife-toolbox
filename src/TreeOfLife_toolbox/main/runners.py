@@ -6,8 +6,8 @@ from typing import List, TextIO, Optional
 
 import pandas as pd
 
-from DD_tools.main.config import Config
-from DD_tools.main.registry import ToolsBase, ToolsRegistryBase
+from TreeOfLife_toolbox.main.config import Config
+from TreeOfLife_toolbox.main.registry import ToolsBase, ToolsRegistryBase
 
 RunnerRegister = partial(ToolsRegistryBase.register, "runner")
 
