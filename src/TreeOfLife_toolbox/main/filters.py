@@ -7,10 +7,10 @@ import pyspark.sql as ps
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
 
-from DD_tools.main.config import Config
-from DD_tools.main.registry import ToolsBase
-from DD_tools.main.registry import ToolsRegistryBase
-from DD_tools.main.utils import SuccessEntry
+from TreeOfLife_toolbox.main.config import Config
+from TreeOfLife_toolbox.main.registry import ToolsBase
+from TreeOfLife_toolbox.main.registry import ToolsRegistryBase
+from TreeOfLife_toolbox.main.utils import SuccessEntry
 
 FilterRegister = partial(ToolsRegistryBase.register, "filter")
 
