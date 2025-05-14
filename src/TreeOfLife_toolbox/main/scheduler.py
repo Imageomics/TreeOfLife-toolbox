@@ -1,10 +1,10 @@
 import argparse
 import os
 
-from DD_tools.main.checkpoint import Checkpoint
-from DD_tools.main.config import Config
-from DD_tools.main.registry import ToolsRegistryBase
-from DD_tools.main.utils import init_logger
+from TreeOfLife_toolbox.main.checkpoint import Checkpoint
+from TreeOfLife_toolbox.main.config import Config
+from TreeOfLife_toolbox.main.registry import ToolsRegistryBase
+from TreeOfLife_toolbox.main.utils import init_logger
 
 if __name__ == "__main__":
     config_path = os.environ.get("CONFIG_PATH")
