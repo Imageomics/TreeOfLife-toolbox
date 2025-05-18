@@ -1,0 +1,16 @@
+Step by step guide:
+
+1. **Download**
+    1. Set up `distributed-downloader` package and prepare all the scripts for the download as described in
+       the [instruction](https://github.com/Imageomics/distributed-downloader/blob/9ef8b0d297f7a868fac31b2b9c3d5f3aa5533472/docs/scripts_README.md).
+    2. Create a config file for the download,
+       use [general_download_config.yaml](../config/tree_of_life_200M/general_download_config.yaml) as a base. Some of
+       the values were already filled and should not be adjusted unless you know what you are doing.
+    3. Run the download script:
+       ```bash
+       distributed_downloader configs/general_download_config.yaml
+       ```
+    4. It might take several weeks to complete, so rerun step 3 when the number of workers is depleted or the download
+       is interrupted. Completeness can be checked with `inner_checkpoint_file` file that is created in the download
+       location.
+       
