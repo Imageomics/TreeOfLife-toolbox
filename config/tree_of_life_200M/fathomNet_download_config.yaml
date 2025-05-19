@@ -1,10 +1,7 @@
 account: "account_name" # Account name for the cluster
 path_to_input: "path_to_input_file" # Path to the input file with the list of servers
 path_to_output_folder: "path_to_output_folder" # Path to the output folder
-initializer_type: "tol200m_general" # DON'T CHANGE THIS VALUE
-included_sources:
-  - "gbif"
-excluded_servers_path: "excluded_servers_general_tol.csv" # Path to the file with the list of excluded servers
+initializer_type: "tol200m_fathomNet" # DON'T CHANGE THIS VALUE
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster
@@ -33,12 +30,6 @@ scripts:
 # Order of the rules does not matter
 # DON'T CHANGE THIS VALUE
 schedule_rules:
-  5000: 40
-  1000: 20
-  500: 10
-  200: 8
-  100: 4
-  50: 2
   1: 1
 
 # Structure of the output folder that will be created automatically
@@ -63,7 +54,7 @@ downloader_parameters:
   image_size: 720 # Size of the image to be downloaded
   logger_level: "INFO" # Logger level
   batch_size: 10000 # DON'T CHANGE THIS VALUE
-  rate_multiplier: 0.8 # DON'T CHANGE THIS VALUE
+  rate_multiplier: 0.3 # DON'T CHANGE THIS VALUE
   default_rate_limit: 10 # DON'T CHANGE THIS VALUE
 
 tools_parameters:
