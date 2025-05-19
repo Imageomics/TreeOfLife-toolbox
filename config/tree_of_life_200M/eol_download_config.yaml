@@ -3,8 +3,7 @@ path_to_input: "path_to_input_file" # Path to the input file with the list of se
 path_to_output_folder: "path_to_output_folder" # Path to the output folder
 initializer_type: "tol200m_general" # DON'T CHANGE THIS VALUE
 included_sources:
-  - "gbif"
-excluded_servers_path: "excluded_servers_safe_tol.csv" # Path to the file with the list of excluded servers
+  - "eol"
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster
@@ -57,8 +56,8 @@ downloader_parameters:
   image_size: 720 # Size of the image to be downloaded
   logger_level: "INFO" # Logger level
   batch_size: 10000 # DON'T CHANGE THIS VALUE
-  rate_multiplier: 0.3 # DON'T CHANGE THIS VALUE
-  default_rate_limit: 6 # DON'T CHANGE THIS VALUE
+  rate_multiplier: 0.8 # DON'T CHANGE THIS VALUE
+  default_rate_limit: 10 # DON'T CHANGE THIS VALUE
 
 tools_parameters:
   num_workers: 0
