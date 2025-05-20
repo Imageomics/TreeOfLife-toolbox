@@ -114,7 +114,7 @@ class ToLBioscanDataTransferScheduleCreation(SchedulerToolBase):
 class ToLBioscanDataTransferRunner(MPIRunnerTool):
     target_columns = [
         "uuid",
-        "gbif_id",
+        "source_id",
         "identifier",
         "is_license_full",
         "license",
