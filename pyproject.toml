@@ -13,7 +13,7 @@ authors = [
     { name = "Elizabeth G. Campolongo", email = "e.campolongo479@gmail.com" },
     { name = "Matthew J. Thompson", email = "thompson.m.j@outlook.com" },
 ]
-description = "A tool for processing datasets that was downloaded using the distributed-downloader package."
+description = "A tool for processing datasets that were downloaded using the distributed-downloader package."
 readme = "README.md"
 requires-python = ">=3.10, <3.12"
 classifiers = [
@@ -66,6 +66,7 @@ keywords = [
     "url",
     "mpi-applications",
     "dataset-generation",
+    "processing",
 ]
 
 [project.urls]
