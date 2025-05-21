@@ -1,10 +1,10 @@
-# Encyclopedia of Life (EoL) Download Guide
+# GBIF Fast Download Guide
 
-This guide provides instructions for downloading images from the Encyclopedia of Life (EoL) source as part of the TreeOfLife200M dataset.
+This guide provides instructions for the fast, distributed download of images from the Global Biodiversity Information Facility (GBIF) source as part of the TreeOfLife200M dataset.
 
 ## Overview
 
-The Encyclopedia of Life (EoL) component contains unique biodiversity images that complement the GBIF sources.
+The GBIF fast download method allows you to efficiently retrieve the majority of images from the GBIF source using distributed processing. This approach is optimized for speed and will retrieve most images in the dataset.
 
 ## Step-by-Step Instructions
 
@@ -15,15 +15,15 @@ The Encyclopedia of Life (EoL) component contains unique biodiversity images tha
    - This will prepare all necessary scripts for the download process
 
 2. **Create Configuration File**
-   - Create a configuration file for your EoL download
-   - Use [eol_download_config.yaml](../config/tree_of_life_200M/eol_download_config.yaml) as a template
-   - Note: The preconfigured values are optimized for EoL's servers and should not be modified unless necessary
+   - Create a configuration file for your download
+   - Use [general_download_config.yaml](../config/tree_of_life_200M/general_download_config.yaml) as a template
+   - Note: Many values in this config are preconfigured and should not be changed unless you understand their purpose
 
 3. **Execute Download**
    - Run the downloader with your configuration:
 
    ```bash
-   distributed_downloader configs/eol_download_config.yaml
+   distributed_downloader configs/general_download_config.yaml
    ```
 
 4. **Monitor and Resume**
@@ -46,6 +46,6 @@ The Encyclopedia of Life (EoL) component contains unique biodiversity images tha
 
 If you encounter issues during download:
 
-- EoL may occasionally update their API or website structure; check for any announcements
-- The download is configured with appropriate rate limits, but you may need to adjust these if you receive HTTP 429 errors
-- Some EoL images may be hosted on third-party servers which can occasionally be unavailable
+- Verify your network connection is stable
+- Ensure you have sufficient disk space for the entire download
+- Check logs for any error messages that might indicate configuration issues
