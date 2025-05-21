@@ -27,6 +27,27 @@ Add these values to your config file:
 - `dst_image_folder`: The destination folder where the image (successes) files will be copied
 - `dst_error_folder`: The destination folder where the error files will be copied
 
+## Required new scripts
+
+### tools_worker.slurm
+
+**Purpose**: Executes the actual tool processing using MPI parallelism.
+
+**Key Components**:
+
+- Runs on the configured number of nodes with specified worker distribution
+- Calls `main/runner.py` with the specified tool name
+- Reads the schedule created by the scheduler and processes assigned partitions
+- Uses all allocated nodes for maximum parallelism
+- Configures memory settings for optimal performance
+- Typical run time is 3 hours
+- Creates output files specific to the tool (e.g., resized images)
+- **Important**: The script should be run through `mpi4py.futures` to ensure proper parallel execution.
+
+```bash
+mpirun -n <num_workers> python -m mpi4py.futures tools_worker.slurm
+```
+
 ## Expected Input Structure
 
 The source directory structure should follow this pattern:
@@ -80,26 +101,3 @@ Key aspects of the output structure:
 - Each file has a unique UUID to prevent collisions
 - Success files are prefixed with `data_` and error files with `errors_`
 - The parquet file format and internal structure from the source is preserved
-
-## Process Flow
-
-1. **Filtering Phase**:
-    - Scans the source directory structure for completed partitions
-    - Identifies successes.parquet and errors.parquet files to transfer
-    - Creates a mapping of source paths to destination paths with unique UUIDs
-    - Ensures destination directories exist
-
-2. **Scheduling Phase**:
-    - Combines all filter tables into a single master schedule file
-    - Creates a comprehensive list of all files that need to be transferred
-
-3. **Execution Phase**:
-    - Loads the schedule and determines which files still need to be copied
-    - Creates necessary directory structure in destination locations
-    - For each file:
-        - Computes MD5 hashsum of source file
-        - Copies file to destination
-        - Computes MD5 hashsum of destination file to verify integrity
-        - Records verification information for successful transfers
-        - Logs errors for failed operations
-    - Uses MPI for parallel processing to maximize efficiency
