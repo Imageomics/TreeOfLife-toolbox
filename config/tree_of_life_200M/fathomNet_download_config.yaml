@@ -2,6 +2,7 @@ account: "account_name" # Account name for the cluster
 path_to_input: "path_to_input_file" # Path to the input file with the list of servers
 path_to_output_folder: "path_to_output_folder" # Path to the output folder
 initializer_type: "tol200m_fathomNet" # DON'T CHANGE THIS VALUE
+bounding_box_information_path: "" # Path to the bounding box information file
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster

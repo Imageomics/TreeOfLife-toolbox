@@ -8,8 +8,8 @@ image entries with updated metadata.
 
 The tool consists of three main components:
 
-1. **ToLFathomnetCropFilter**: Identifies all valid image partitions in the dataset that can be processed. Creates a simple
-   list of server/partition pairs for the scheduler.
+1. **ToLFathomnetCropFilter**: Identifies all valid image partitions in the dataset that can be processed. 
+   Creates a simple list of server/partition pairs for the scheduler.
 
 2. **ToLFathomnetCropScheduleCreation**: Creates a processing schedule by distributing server/partition pairs across
    available worker nodes to balance the workload.

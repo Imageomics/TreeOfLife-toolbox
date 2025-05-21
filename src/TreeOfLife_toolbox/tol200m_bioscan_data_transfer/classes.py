@@ -23,7 +23,19 @@ from TreeOfLife_toolbox.main.utils import load_dataframe
 
 @FilterRegister("tol200m_bioscan_data_transfer")
 class ToLBioscanDataTransferFilter(SparkFilterToolBase):
+    """
+    A filter class that processes BIOSCAN data and prepares it for transfer to the Tree of Life format.
+    
+    This class processes input data from BIOSCAN, joins it with provenance data, and 
+    partitions it into batches for further processing.
+    """
     def __init__(self, cfg: Config):
+        """
+        Initialize the BIOSCAN data transfer filter.
+        
+        Args:
+            cfg (Config): Configuration object containing necessary parameters
+        """
         super().__init__(cfg)
         self.filter_name: str = "tol200m_bioscan_data_transfer"
         self.batch_size: int = self.config.get("downloader_parameters", {}).get(
@@ -35,6 +47,16 @@ class ToLBioscanDataTransferFilter(SparkFilterToolBase):
         self.provenance_path = self.config["provenance_path"]
 
     def run(self):
+        """
+        Execute the data processing pipeline.
+        
+        Loads data from the input path, joins it with provenance data, and partitions
+        it into batches based on the configured batch size. The resulting batches are
+        written as CSV files to the output path.
+        
+        Returns:
+            None
+        """
         multimedia_df = load_dataframe(self.spark, self.input_path)
         provenance_df = self.spark.read.parquet(self.provenance_path)
 
@@ -77,15 +99,33 @@ class ToLBioscanDataTransferFilter(SparkFilterToolBase):
 
 @SchedulerRegister("tol200m_bioscan_data_transfer")
 class ToLBioscanDataTransferScheduleCreation(SchedulerToolBase):
+    """
+    A scheduler class that creates a schedule for transferring BIOSCAN data to TOL format.
+    
+    This class generates a schedule file that maps source partition paths to destination
+    paths in the Tree of Life data structure, assigning UUIDs to each partition.
+    """
     def __init__(self, cfg: Config):
+        """
+        Initialize the scheduler for BIOSCAN data transfer.
+        
+        Args:
+            cfg (Config): Configuration object containing necessary parameters
+        """
         super().__init__(cfg)
         self.filter_name: str = "tol200m_bioscan_data_transfer"
 
     def run(self):
-        # Go over al partition_id folders
-        # put into 1 df
-        # generate src_path and dst_path
-        # save into schedule.csv
+        """
+        Create a schedule for data transfer.
+        
+        Identifies partitions in the processed data folder and creates a mapping between
+        source paths and destination paths in the Tree of Life data structure.
+        The resulting schedule is saved as a CSV file.
+        
+        Returns:
+            None
+        """
         processed_path = self.config.get_folder("urls_folder")
         partitions = [
             f"{processed_path}/{folder}"
@@ -112,6 +152,13 @@ class ToLBioscanDataTransferScheduleCreation(SchedulerToolBase):
 
 @RunnerRegister("tol200m_bioscan_data_transfer")
 class ToLBioscanDataTransferRunner(MPIRunnerTool):
+    """
+    A runner class that executes the transfer of BIOSCAN data to the Tree of Life format.
+    
+    This class processes the partitioned data according to the schedule, reads and resizes images,
+    calculates hashsums, and saves the data in the Tree of Life format at the destination paths.
+    It uses MPI for parallel processing.
+    """
     target_columns = [
         "uuid",
         "source_id",
@@ -128,6 +175,12 @@ class ToLBioscanDataTransferRunner(MPIRunnerTool):
     ]
 
     def __init__(self, cfg: Config):
+        """
+        Initialize the BIOSCAN data transfer runner.
+        
+        Args:
+            cfg (Config): Configuration object containing necessary parameters
+        """
         super().__init__(cfg)
 
         self.mpi_comm = None
@@ -146,9 +199,24 @@ class ToLBioscanDataTransferRunner(MPIRunnerTool):
         self.image_folder = self.config["bioscan_image_folder"]
 
     def get_schedule(self) -> pd.DataFrame:
+        """
+        Load the transfer schedule from a CSV file.
+        
+        Returns:
+            pd.DataFrame: DataFrame containing source and destination paths
+        """
         return pd.read_csv(os.path.join(self.filter_folder, "schedule.csv"))
 
     def get_remaining_table(self, schedule: pd.DataFrame) -> pd.DataFrame:
+        """
+        Determine which files from the schedule still need to be processed.
+        
+        Args:
+            schedule (pd.DataFrame): DataFrame containing the full schedule
+            
+        Returns:
+            pd.DataFrame: DataFrame containing only the files that still need to be processed
+        """
         verification_df = self.load_table(
             self.verification_folder, self.verification_scheme
         )
@@ -164,6 +232,16 @@ class ToLBioscanDataTransferRunner(MPIRunnerTool):
     def image_resize(
         image: np.ndarray, _max_size=720
     ) -> Tuple[np.ndarray[int, np.dtype[np.uint8]], Tuple[int, int]]:
+        """
+        Resize an image while preserving its aspect ratio.
+        
+        Args:
+            image (np.ndarray): Input image to resize
+            _max_size (int, optional): Maximum dimension size. Defaults to 720.
+            
+        Returns:
+            Tuple[np.ndarray, Tuple[int, int]]: Resized image and its new dimensions (height, width)
+        """
         h, w = image.shape[:2]
         if h > w:
             new_h = _max_size
@@ -177,6 +255,18 @@ class ToLBioscanDataTransferRunner(MPIRunnerTool):
         )
 
     def read_images(self, row: pd.Series) -> pd.Series:
+        """
+        Read and process an image for a given data row.
+        
+        Loads the image corresponding to the source_id, calculates original hashsum,
+        resizes if necessary, and calculates resized hashsum.
+        
+        Args:
+            row (pd.Series): DataFrame row containing source_id and other metadata
+            
+        Returns:
+            pd.Series: Series containing image data and metadata
+        """
         image_path = f"{self.image_folder}/{row['split']}/"
         if row["chunk"] not in [np.nan, None]:
             image_path += f"{row['chunk']}/"
@@ -212,6 +302,18 @@ class ToLBioscanDataTransferRunner(MPIRunnerTool):
         )
 
     def copy_file(self, row: Tuple[pd.Index, pd.Series]) -> Tuple[bool, str, str]:
+        """
+        Process and copy a file from source to destination.
+        
+        Reads data from the source path, processes images, and saves in the Tree of Life format
+        at the destination path.
+        
+        Args:
+            row (Tuple[pd.Index, pd.Series]): Row from the schedule with source and destination paths
+            
+        Returns:
+            Tuple[bool, str, str]: Error flag, source path, and either destination path or error message
+        """
         src_path = row[1]["src_path"]
         dst_path = row[1]["dst_path"]
         try:
@@ -246,6 +348,16 @@ class ToLBioscanDataTransferRunner(MPIRunnerTool):
             return True, src_path, str(e)
 
     def run(self):
+        """
+        Execute the data transfer process using MPI for parallel processing.
+        
+        Loads the schedule, determines which files still need processing,
+        and uses MPI to distribute the workload across available processes.
+        Progress is tracked in a verification file.
+        
+        Returns:
+            None
+        """
         from mpi4py.futures import MPIPoolExecutor
 
         self.ensure_folders_created()
