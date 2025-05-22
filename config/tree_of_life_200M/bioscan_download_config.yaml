@@ -1,27 +1,27 @@
 account: "account_name" # Account name for the cluster
-path_to_input: "path_to_input_file" # Path to the input file with the list of servers
-path_to_output_folder: "path_to_output_folder" # Path to the output folder
+path_to_input: "path/to/input_file" # Path to the input file with the list of servers
+path_to_output_folder: "path/to/output_folder" # Path to the output folder
 provenance_path: "" # Path to a provenance Parquet file containing source metadata
-path_to_tol_folder: "" # Path to where you save TOL data folder (a.k.a. `<output_dir>/data`)
-bioscan_image_folder: "" # Path to where you unzipped BIOSCAN images (up to `original_full` folder)
+path_to_tol_folder: "" # Path to where you want the final data be saved (a.k.a. `<output_dir>/data`)
+bioscan_image_folder: "" # Path where unzipped BIOSCAN images reside (up to `original_full` folder)
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster
-  general_submitter: "path_to_general_submitter_script.sh"
-  tools_submitter: "path_to_tools_submitter_script.sh"
-  mpi_submitter: "path_to_mpi_submitter_script.sh"
-  schedule_creator_submitter: "path_to_schedule_creator_submitter_script.sh"
+  general_submitter: "path/to/general_submitter_script.sh"
+  tools_submitter: "path/to/tools_submitter_script.sh"
+  mpi_submitter: "path/to/mpi_submitter_script.sh"
+  schedule_creator_submitter: "path/to/schedule_creator_submitter_script.sh"
   # Cluster job's scripts
-  initialization_script: "path_to_initialization_script.slurm"
-  profiling_script: "path_to_profiling_script.slurm"
-  schedule_creation_script: "path_to_schedule_creation_script.slurm"
-  verify_script: "path_to_verify_script.slurm"
-  download_script: "path_to_download_script.slurm"
+  initialization_script: "path/to/initialization_script.slurm"
+  profiling_script: "path/to/profiling_script.slurm"
+  schedule_creation_script: "path/to/schedule_creation_script.slurm"
+  verify_script: "path/to/verify_script.slurm"
+  download_script: "path/to/download_script.slurm"
   # tools scripts
-  tools_filter_script: "path_to_tools_filter_script.slurm"
-  tools_scheduling_script: "path_to_tools_scheduling_script.slurm"
-  tools_worker_script: "path_to_tools_worker_script.slurm"
-  tools_verification_script: "path_to_tools_verification_script.slurm"
+  tools_filter_script: "path/to/tools_filter_script.slurm"
+  tools_scheduling_script: "path/to/tools_scheduling_script.slurm"
+  tools_worker_script: "path/to/tools_worker_script.slurm"
+  tools_verification_script: "path/to/tools_verification_script.slurm"
 
 # Rules for the schedule creation
 # They determine how many simultaneous downloader instances can be run on the same server
