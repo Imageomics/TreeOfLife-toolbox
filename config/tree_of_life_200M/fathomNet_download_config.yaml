@@ -1,0 +1,72 @@
+account: "account_name" # Account name for the cluster
+path_to_input: "path/to/input_file" # Path to the input file with the list of servers
+path_to_output_folder: "path/to/output_folder" # Path to the output folder
+initializer_type: "tol200m_fathomNet" # DON'T CHANGE THIS VALUE
+included_sources:
+  - "fathomnet"
+bounding_box_information_path: "" # Path to the bounding box information file
+image_crop_path: "" # Path where the cropped images will be stored
+dst_image_folder: "" # The destination folder where the image (successes) files will be copied
+dst_error_folder: "" # The destination folder where the error files will be copied
+
+scripts:
+  # Wrapper scripts to submit jobs to the cluster
+  general_submitter: "path/to/general_submitter_script.sh"
+  tools_submitter: "path/to/tools_submitter_script.sh"
+  mpi_submitter: "path/to/mpi_submitter_script.sh"
+  schedule_creator_submitter: "path/to/schedule_creator_submitter_script.sh"
+  # Cluster job's scripts
+  initialization_script: "path/to/initialization_script.slurm"
+  profiling_script: "path/to/profiling_script.slurm"
+  schedule_creation_script: "path/to/schedule_creation_script.slurm"
+  verify_script: "path/to/verify_script.slurm"
+  download_script: "path/to/download_script.slurm"
+  # tools scripts
+  tools_filter_script: "path/to/tools_filter_script.slurm"
+  tools_scheduling_script: "path/to/tools_scheduling_script.slurm"
+  tools_worker_script: "path/to/tools_worker_script.slurm"
+  tools_verification_script: "path/to/tools_verification_script.slurm"
+
+# Rules for the schedule creation
+# They determine how many simultaneous downloader instances can be run on the same server
+# Rules are based on the number of batches required to be downloaded from the server
+# Rule is: key - number of batches, value - number of instances; if server has more than key batches, value instances can be run
+# Server with 0 batches is considered to be downloaded and are ignored
+# Default value is 1
+# Order of the rules does not matter
+# DON'T CHANGE THIS VALUE
+schedule_rules:
+  1: 1
+
+# Structure of the output folder that will be created automatically
+output_structure:
+  urls_folder: "servers_batched" # Folder where the servers will be split into batches
+  logs_folder: "logs" # Folder for the logs
+  images_folder: "downloaded_images" # Folder for the downloaded images
+  schedules_folder: "schedules" # Folder for the schedules
+  profiles_table: "servers_profiles.csv" # Table with the servers profiles
+  ignored_table: "ignored_servers.csv" # Table with the servers that were ignored, you can find an example in examples/ignored_servers.csv
+  inner_checkpoint_file: "inner_checkpoint.yaml" # Inner checkpoint file
+  tools_folder: "tools" # Folder for the tools
+
+# Parameters for the downloader
+suppress_unchanged_error: False # Suppress the error if two consecutive downloads do not change the number of batches completed
+downloader_parameters:
+  num_downloads: 0 # Number of downloads to be performed
+  max_nodes: 0 # Maximum number of nodes to be used
+  workers_per_node: 0 # Number of workers per node
+  cpu_per_worker: 0 # Number of CPUs per worker
+  header: "" # Header for the requests
+  image_size: 720 # Size of the image to be downloaded
+  logger_level: "INFO" # Logger level
+  batch_size: 10000 # DON'T CHANGE THIS VALUE
+  rate_multiplier: 0.3 # DON'T CHANGE THIS VALUE
+  default_rate_limit: 10 # DON'T CHANGE THIS VALUE
+
+tools_parameters:
+  num_workers: 0
+  max_nodes: 0
+  workers_per_node: 0
+  cpu_per_worker: 0
+  threshold_size: 224 # Threshold size for the images, images with size less than this value will filtered out
+  new_resize_size: 720 # New size for the images in resize tool
