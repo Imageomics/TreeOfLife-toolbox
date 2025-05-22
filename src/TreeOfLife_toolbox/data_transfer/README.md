@@ -69,8 +69,8 @@ Important components:
 
 - Source folders are partitioned by `server_name=*` and then `partition_id=*`
 - Each partition contains:
-    - `successes.parquet`: Data about successfully downloaded images
-    - `errors.parquet`: Data about download errors
+    - `successes.parquet`: Successfully downloaded images
+    - `errors.parquet`: Errors produced during download
     - `completed`: Empty marker file indicating the download is complete for this partition
 
 ## Output Structure
