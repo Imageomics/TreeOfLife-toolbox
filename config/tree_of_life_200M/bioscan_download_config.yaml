@@ -65,4 +65,4 @@ tools_parameters:
   workers_per_node: 0
   cpu_per_worker: 0
   threshold_size: 224 # Threshold size for the images, images with size less than this value will filtered out
-  new_resize_size: 720 # New size for the images in resize tool
+  new_resize_size: 720 # New size for the images in resize tool (longest side will not exceed this many pixels)
