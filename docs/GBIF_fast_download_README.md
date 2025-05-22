@@ -1,10 +1,10 @@
 # GBIF Fast Download Guide
 
-This guide provides instructions for the fast, distributed download of images from the Global Biodiversity Information Facility (GBIF) source as part of the TreeOfLife200M dataset.
+This guide provides instructions for the fast, distributed download of images from the [Global Biodiversity Information Facility (GBIF)](https://gbif.org) core data provider, specifically the [GBIF snapshot](https://doi.org/10.15468/dl.bfv433) incorporated into the TreeOfLife-200M dataset.
 
 ## Overview
 
-The GBIF fast download method allows you to efficiently retrieve the majority of images from the GBIF source using distributed processing. This approach is optimized for speed and will retrieve most images in the dataset.
+The GBIF fast download method allows you to efficiently retrieve the majority of images from the [GBIF snapshot](https://doi.org/10.15468/dl.bfv433) using distributed processing. This approach is optimized for speed and will retrieve most images in the dataset.
 
 ## Step-by-Step Instructions
 
@@ -35,7 +35,7 @@ The GBIF fast download method allows you to efficiently retrieve the majority of
 ### 2. Post-Processing
 
 1. **Transfer to Dataset Structure**
-   - After completing the download, transfer images to the TreeOfLife200M dataset structure using:
+   - After completing the download, transfer images to the TreeOfLife-200M dataset structure using:
 
    ```bash
    tree_of_life_toolbox {config path} data_transfer

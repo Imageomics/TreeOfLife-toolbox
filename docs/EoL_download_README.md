@@ -1,6 +1,6 @@
 # Encyclopedia of Life (EoL) Download Guide
 
-This guide provides instructions for downloading images from the Encyclopedia of Life (EoL) source as part of the TreeOfLife200M dataset.
+This guide provides instructions for downloading images from the [Encyclopedia of Life (EOL)](https://eol.org) data provider as part of the TreeOfLife-200M dataset.
 
 ## Overview
 
@@ -34,7 +34,7 @@ The Encyclopedia of Life (EoL) component contains unique biodiversity images tha
 ### 2. Post-Processing
 
 1. **Transfer to Dataset Structure**
-   - After completing the download, transfer images to the TreeOfLife200M dataset structure using:
+   - After completing the download, transfer images to the TreeOfLife-200M dataset structure using:
 
    ```bash
    tree_of_life_toolbox {config path} data_transfer

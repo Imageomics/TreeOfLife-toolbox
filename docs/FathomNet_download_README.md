@@ -1,10 +1,10 @@
 # FathomNet Download Guide
 
-This guide provides instructions for downloading and processing marine life images from the FathomNet dataset as part of the TreeOfLife200M collection.
+This guide provides instructions for downloading and processing marine life images from the [FathomNet database](https://database.fathomnet.org/fathomnet/#/) as part of the TreeOfLife-200M collection.
 
 ## Overview
 
-FathomNet is a specialized dataset focusing on marine organisms. It contains annotated underwater imagery that requires specific processing, including bounding box cropping, to properly incorporate into the TreeOfLife200M dataset.
+FathomNet is a specialized database focusing on marine organisms. It contains annotated underwater imagery that requires specific processing, including bounding box cropping, to properly incorporate into the TreeOfLife-200M dataset.
 
 ## Step-by-Step Instructions
 
@@ -46,7 +46,7 @@ FathomNet is a specialized dataset focusing on marine organisms. It contains ann
    - This step is essential for extracting the relevant organisms from the underwater imagery
 
 2. **Transfer to Dataset Structure**
-   - After cropping, transfer processed images to the TreeOfLife200M dataset structure:
+   - After cropping, transfer processed images to the TreeOfLife-200M dataset structure by running:
 
    ```bash
    tree_of_life_toolbox {config path} data_transfer

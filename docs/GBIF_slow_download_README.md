@@ -1,6 +1,6 @@
 # GBIF Safe Download Guide
 
-This guide provides instructions for the safe, rate-limited download of images from the GBIF source as part of the TreeOfLife200M dataset.
+This guide provides instructions for the safe, rate-limited download of images from the [GBIF snapshot](https://doi.org/10.15468/dl.bfv433) used in the TreeOfLife-200M dataset.
 
 ## Overview
 

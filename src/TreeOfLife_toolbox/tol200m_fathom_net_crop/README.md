@@ -46,7 +46,7 @@ Add these fields to your configuration file:
 
 - Cropped images are saved in the specified output path using the same directory structure as the source
 - Each cropped image has:
-    - Updated UUID and source_id based on values from the TreeOfLife200M dataset
+    - Updated UUID and source_id based on values from the TreeOfLife-200M dataset
     - Updated resized_size reflecting the dimensions of the cropped region
     - New hashsum_resized value calculated from the cropped image data
 - If a bounding box extends beyond the image boundaries, it will be automatically clipped to fit within the image
