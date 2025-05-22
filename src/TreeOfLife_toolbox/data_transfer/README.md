@@ -2,23 +2,18 @@
 
 ## Summary Description
 
-The Data Transfer module provides functionality for efficiently transferring parquet files from source locations to
-destination locations with integrity verification. It operates in three phases:
+The Data Transfer module provides functionality for efficiently transferring parquet files from source locations to destination locations with integrity verification. It operates in three phases:
 
-1. **Filtering**: The `DataTransferFilter` class identifies parquet files that need to be transferred and generates
-   unique destination paths.
-2. **Scheduling**: The `DataTransferScheduleCreation` class creates a comprehensive schedule of all file transfers by
-   combining filter tables.
-3. **Execution**: The `DataTransferRunner` class performs the actual file transfers with parallel processing using MPI,
-   including MD5 hash verification.
+1. **Filtering**: The `DataTransferFilter` class identifies parquet files that need to be transferred and generates unique destination paths.
+2. **Scheduling**: The `DataTransferScheduleCreation` class creates a comprehensive schedule of all file transfers by combining filter tables.
+3. **Execution**: The `DataTransferRunner` class performs the actual file transfers with parallel processing using MPI, including MD5 hash verification.
 
 The module handles two types of files:
 
 - **Success files** (`successes.parquet`): Contains data about successfully downloaded images
 - **Error files** (`errors.parquet`): Contains data about download errors
 
-Each file is transferred to a structured destination path that includes the server name and a randomly generated UUID to
-ensure uniqueness.
+Each file is transferred to a structured destination path that includes the server name and a randomly generated UUID to ensure uniqueness.
 
 ## Configuration Requirements
 
