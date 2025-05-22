@@ -11,7 +11,7 @@ The GBIF safe download method is designed for retrieving images from heavily rat
 ### 1. Setup and Download
 
 1. **Install and Configure Downloader**
-   - Set up the `distributed-downloader` package following the [official instructions](https://github.com/Imageomics/distributed-downloader)
+   - Set up the `distributed-downloader` package following the [installation instructions](https://github.com/Imageomics/distributed-downloader?tab=readme-ov-file#installation-instructions).
    - This will prepare all necessary scripts for the download process
 
 2. **Create Configuration File**
