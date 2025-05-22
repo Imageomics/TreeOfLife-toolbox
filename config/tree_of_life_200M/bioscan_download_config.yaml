@@ -1,13 +1,9 @@
 account: "account_name" # Account name for the cluster
 path_to_input: "path_to_input_file" # Path to the input file with the list of servers
 path_to_output_folder: "path_to_output_folder" # Path to the output folder
-initializer_type: "tol200m_fathomNet" # DON'T CHANGE THIS VALUE
-included_sources:
-  - "fathomnet"
-bounding_box_information_path: "" # Path to the bounding box information file
-image_crop_path: "" # Path where the cropped images will be stored
-dst_image_folder: "" # The destination folder where the image (successes) files will be copied
-dst_error_folder: "" # The destination folder where the error files will be copied
+provenance_path: "" # Path to a provenance Parquet file containing source metadata
+path_to_tol_folder: "" # Path to where you save TOL data folder (a.k.a. `<output_dir>/data`)
+bioscan_image_folder: "" # Path to where you unzipped BIOSCAN images (up to `original_full` folder)
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster
@@ -60,7 +56,7 @@ downloader_parameters:
   image_size: 720 # Size of the image to be downloaded
   logger_level: "INFO" # Logger level
   batch_size: 10000 # DON'T CHANGE THIS VALUE
-  rate_multiplier: 0.3 # DON'T CHANGE THIS VALUE
+  rate_multiplier: 0.8 # DON'T CHANGE THIS VALUE
   default_rate_limit: 10 # DON'T CHANGE THIS VALUE
 
 tools_parameters:

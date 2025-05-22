@@ -18,6 +18,7 @@ The GBIF safe download method is designed for retrieving images from heavily rat
    - Create a configuration file for your safe download
    - Use [safe_download_config.yaml](../config/tree_of_life_200M/safe_download_config.yaml) as a template
    - Note: The preconfigured values handle rate limiting appropriately and should not be modified unless necessary
+   - Please ensure that the `excluded_servers_path` points to the provided [excluded_servers_safe_tol.csv](../config/tree_of_life_200M/excluded_servers_safe_tol.csv) file
 
 3. **Execute Download**
    - Run the downloader with your configuration:
@@ -41,6 +42,7 @@ The GBIF safe download method is designed for retrieving images from heavily rat
    ```
 
    - Replace `{config path}` with the path to your job configuration file
+   - `safe_download_config.yaml` can be used as a template again
 
 ## Troubleshooting
 

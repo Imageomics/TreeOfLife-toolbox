@@ -5,6 +5,8 @@ initializer_type: "tol200m_general" # DON'T CHANGE THIS VALUE
 included_sources:
   - "gbif"
 excluded_servers_path: "excluded_servers_safe_tol.csv" # Path to the file with the list of excluded servers
+dst_image_folder: "" # The destination folder where the image (successes) files will be copied
+dst_error_folder: "" # The destination folder where the error files will be copied
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster

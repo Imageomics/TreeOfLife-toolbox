@@ -4,6 +4,8 @@ path_to_output_folder: "path_to_output_folder" # Path to the output folder
 initializer_type: "tol200m_general" # DON'T CHANGE THIS VALUE
 included_sources:
   - "eol"
+dst_image_folder: "" # The destination folder where the image (successes) files will be copied
+dst_error_folder: "" # The destination folder where the error files will be copied
 
 scripts:
   # Wrapper scripts to submit jobs to the cluster

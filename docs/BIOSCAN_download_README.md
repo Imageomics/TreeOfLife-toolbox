@@ -29,6 +29,8 @@ BIOSCAN is a specialized dataset available through Google Drive rather than requ
    ```
 
    - Replace `{config path}` with the path to your job configuration file
+   - Use [bioscan_download_config.yaml](../config/tree_of_life_200M/bioscan_download_config.yaml) as a template
+   - Note: Many values in this config are preconfigured and should not be changed unless you understand their purpose
    - This tool handles the specific metadata and directory structure of the BIOSCAN dataset
 
 ## Troubleshooting

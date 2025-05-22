@@ -18,6 +18,7 @@ The GBIF fast download method allows you to efficiently retrieve the majority of
    - Create a configuration file for your download
    - Use [general_download_config.yaml](../config/tree_of_life_200M/general_download_config.yaml) as a template
    - Note: Many values in this config are preconfigured and should not be changed unless you understand their purpose
+   - Please ensure that the `excluded_servers_path` points to the provided [excluded_servers_general_tol.csv](../config/tree_of_life_200M/excluded_servers_general_tol.csv) file
 
 3. **Execute Download**
    - Run the downloader with your configuration:
@@ -41,6 +42,7 @@ The GBIF fast download method allows you to efficiently retrieve the majority of
    ```
 
    - Replace `{config path}` with the path to your job configuration file
+   - `general_download_config.yaml` can be used as a template again
 
 ## Troubleshooting
 

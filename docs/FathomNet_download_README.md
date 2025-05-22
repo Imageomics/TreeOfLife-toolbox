@@ -42,6 +42,7 @@ FathomNet is a specialized dataset focusing on marine organisms. It contains ann
    ```
 
    - Replace `{config path}` with the path to your job configuration file
+   - `fathomNet_download_config.yaml` can be used as a template again
    - This step is essential for extracting the relevant organisms from the underwater imagery
 
 2. **Transfer to Dataset Structure**
@@ -52,6 +53,7 @@ FathomNet is a specialized dataset focusing on marine organisms. It contains ann
    ```
 
    - Replace `{config path}` with the path to your job configuration file
+   - `fathomNet_download_config.yaml` can be used as a template again
 
 ## Troubleshooting
 

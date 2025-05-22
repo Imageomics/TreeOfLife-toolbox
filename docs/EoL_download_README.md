@@ -41,6 +41,7 @@ The Encyclopedia of Life (EoL) component contains unique biodiversity images tha
    ```
 
    - Replace `{config path}` with the path to your job configuration file
+   - `eol_download_config.yaml` can be used as a template again
 
 ## Troubleshooting
 
