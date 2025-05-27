@@ -51,5 +51,4 @@ fi
 
 sbatch_cmd+=" --account=${ACCOUNT} ${script} ${tool_name} ${seq_id}"
 
-#echo "$sbatch_cmd" > test.log
 eval "$sbatch_cmd"

@@ -1,24 +1,21 @@
 import argparse
 import os
 from logging import Logger
+from pathlib import Path
 from typing import Dict, List, Optional, TextIO, Tuple
 
 import pandas as pd
 from attr import Factory, define, field
 
-from DD_tools.main.checkpoint import Checkpoint
-from DD_tools.main.config import Config
-from DD_tools.main.registry import ToolsRegistryBase
-from DD_tools.main.utils import (
+from TreeOfLife_toolbox.main.checkpoint import Checkpoint
+from TreeOfLife_toolbox.main.config import Config
+from TreeOfLife_toolbox.main.registry import ToolsRegistryBase
+from TreeOfLife_toolbox.main.utils import (
     init_logger,
     truncate_paths,
     ensure_created,
     submit_job,
     preprocess_dep_ids,
-)
-
-division_df = pd.read_csv(
-    "/users/PAS2119/andreykopanev/distributed_downloader_test/data_move_division_big.csv"
 )
 
 
@@ -27,13 +24,20 @@ class Tools:
     config: Config
     tool_name: str
     seq_id: int
+    division_df: pd.DataFrame
 
     logger: Logger = field(default=Factory(lambda: init_logger(__name__)))
 
     tool_folder: Optional[str] = None
     tool_job_history_path: Optional[str] = None
     tool_checkpoint_path: Optional[str] = None
-    checkpoint_scheme: Optional[Dict[str, bool]] = None
+    checkpoint_scheme = {
+        "filtering_scheduled": False,
+        "filtering_completed": False,
+        "scheduling_scheduled": False,
+        "scheduling_completed": False,
+        "completed": False,
+    }
 
     tool_checkpoint: Optional[Checkpoint] = None
     _checkpoint_override: Optional[Dict[str, bool]] = None
@@ -42,16 +46,17 @@ class Tools:
 
     @classmethod
     def from_path(
-            cls,
-            path: str,
-            tool_name: str,
-            set_id: int,
-            checkpoint_override: Optional[Dict[str, bool]] = None,
-            tool_name_override: Optional[bool] = False,
+        cls,
+        path: str,
+        tool_name: str,
+        set_id: int,
+        division_df: pd.DataFrame,
+        checkpoint_override: Optional[Dict[str, bool]] = None,
+        tool_name_override: Optional[bool] = False,
     ) -> "Tools":
         if (
-                not tool_name_override
-                and tool_name not in ToolsRegistryBase.TOOLS_REGISTRY.keys()
+            not tool_name_override
+            and tool_name not in ToolsRegistryBase.TOOLS_REGISTRY.keys()
         ):
             raise ValueError("unknown tool name")
 
@@ -60,6 +65,7 @@ class Tools:
             tool_name=tool_name,
             checkpoint_override=checkpoint_override,
             seq_id=set_id,
+            division_df=division_df,
         )
 
     def __attrs_post_init__(self):
@@ -76,18 +82,12 @@ class Tools:
             self.tool_folder, "tool_checkpoint.yaml"
         )
 
-        if not self.checkpoint_scheme:
-            self.checkpoint_scheme = {
-                "filtered": False,
-                "schedule_created": False,
-                "completed": False,
-            }
-
         self.__init_environment()
         self.__init_file_structure()
 
     def __init_environment(self) -> None:
         os.environ["CONFIG_PATH"] = self.config.config_path
+        os.environ["TOOLBOX_PATH"] = str(Path(__file__).parent.parent.resolve())
 
         os.environ["ACCOUNT"] = self.config["account"]
         os.environ["PATH_TO_INPUT"] = self.config["path_to_input"]
@@ -149,7 +149,7 @@ class Tools:
     def __schedule_filtering(self) -> None:
         self.logger.info("Scheduling filtering script")
 
-        sub_division = division_df[division_df["division"] == self.seq_id]
+        sub_division = self.division_df[self.division_df["division"] == self.seq_id]
         sub_division.to_csv(
             os.path.join(self.tool_folder, "filter_table", "division.csv"),
             index=False,
@@ -199,16 +199,24 @@ class Tools:
         self.logger.info("Scheduled workers script")
 
     def apply_tool(self):
-        if not self.tool_checkpoint.get("filtered", False):
+        if not (
+            self.tool_checkpoint.get("filtering_scheduled", False)
+            or self.tool_checkpoint.get("filtering_completed", False)
+        ):
             self.__schedule_filtering()
         else:
-            self.logger.info("Skipping filtering script: table already created")
+            self.logger.info(
+                "Skipping filtering script: job is already scheduled or table has been already created"
+            )
 
-        if not self.tool_checkpoint.get("schedule_created", False):
+        if not (
+            self.tool_checkpoint.get("schedule_scheduled", False)
+            or self.tool_checkpoint.get("schedule_completed", False)
+        ):
             self.__schedule_schedule_creation()
         else:
             self.logger.info(
-                "Skipping schedule creation script: schedule already created"
+                "Skipping schedule creation script: job is already scheduled or schedule has been already created"
             )
 
         if not self.tool_checkpoint.get("completed", False):
@@ -236,6 +244,12 @@ def main():
         help="the name of the tool that is intended to be used",
     )
     parser.add_argument(
+        "divisions_path",
+        metavar="divisions_path",
+        type=str,
+        help="the path to the CSV file with job divisions",
+    )
+    parser.add_argument(
         "--reset_filtering",
         action="store_true",
         help="Will reset filtering and scheduling steps",
@@ -260,15 +274,23 @@ def main():
     state_override = None
     if _args.reset_filtering:
         state_override = {
-            "filtered": False,
-            "schedule_created": False,
+            "filtering_scheduled": False,
+            "filtering_completed": False,
+            "scheduling_scheduled": False,
+            "scheduling_completed": False,
             "verification": False,
+            "completed": False,
         }
     elif _args.reset_scheduling:
-        state_override = {"schedule_created": False}
+        state_override = {
+            "scheduling_scheduled": False,
+            "scheduling_completed": False,
+            "completed": False,
+        }
     if _args.reset_runners:
-        state_override = {"verification": False}
+        state_override = {"verification": False, "completed": False}
 
+    division_df = pd.read_csv(_args.divisions_path)
     division_total = division_df["division"].unique().tolist()
 
     for division in division_total:
@@ -276,6 +298,7 @@ def main():
             config_path,
             tool_name,
             division,
+            division_df=division_df,
             checkpoint_override=state_override,
             tool_name_override=_args.tool_name_override,
         )

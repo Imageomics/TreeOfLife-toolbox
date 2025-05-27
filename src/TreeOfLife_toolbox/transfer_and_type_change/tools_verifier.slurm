@@ -28,4 +28,4 @@ srun \
   --cpus-per-task=1 \
   --mem=0 \
   --output="${logs_dir}/tool_verifier.log" \
-  python "/users/PAS2119/andreykopanev/distributed_downloader_test/transfer_and_type_change/verification.py" "${seq_id}"
+  python "${TOOLBOX_PATH}/transfer_and_type_change/verification.py" "${tool_name}" "${seq_id}"

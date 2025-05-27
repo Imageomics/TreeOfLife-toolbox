@@ -3,10 +3,10 @@ import os
 
 import pandas as pd
 
-from DD_tools.main.checkpoint import Checkpoint
-from DD_tools.main.config import Config
-from DD_tools.main.runners import MPIRunnerTool
-from DD_tools.main.utils import init_logger
+from TreeOfLife_toolbox.main.checkpoint import Checkpoint
+from TreeOfLife_toolbox.main.config import Config
+from TreeOfLife_toolbox.main.runners import MPIRunnerTool
+from TreeOfLife_toolbox.main.utils import init_logger
 
 if __name__ == "__main__":
     config_path = os.environ.get("CONFIG_PATH")
@@ -17,6 +17,12 @@ if __name__ == "__main__":
     logger = init_logger(__name__)
 
     parser = argparse.ArgumentParser(description='Running step of the Tool')
+    parser.add_argument(
+        "scheduler_name",
+        metavar="scheduler_name",
+        type=str,
+        help="the name of the tool that is intended to be used",
+    )
     parser.add_argument("seq_id", metavar="seq_id", type=int,
                         help="the name of the tool that is intended to be used")
     _args = parser.parse_args()
