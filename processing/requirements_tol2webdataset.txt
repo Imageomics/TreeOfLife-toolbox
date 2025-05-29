@@ -1,0 +1,8 @@
+polars
+pandas
+tqdm
+webdataset
+opencv-python
+numpy
+Pillow
+
