@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+title: TreeOfLife-toolbox
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Andrei
+    family-names: Kopanev
+  - given-names: Net
+    family-names: Zhang
+    orcid: 'https://orcid.org/0000-0003-2664-451X'
+  - given-names: Jianyang
+    family-names: Gu
+    orcid: 'https://orcid.org/0000-0002-4060-7427'
+  - given-names: Samuel
+    family-names: Stevens
+    orcid: 'https://orcid.org/0009-0000-9493-7766'
+  - given-names: 'Matthew J'
+    family-names: Thompson
+    orcid: 'https://orcid.org/0000-0003-0583-8585'
+  - given-names: 'Elizabeth G'
+    family-names: Campolongo
+    orcid: 'https://orcid.org/0000-0003-0846-2413'
+repository-code: 'https://github.com/Imageomics/TreeOfLife-toolbox'
+identifiers:
+  - description: "The GitHub release URL of tag v0.2.0-beta."
+    type: url
+    value: "https://github.com/Imageomics/TreeOfLife-toolbox/releases/tag/v0.2.0-beta"
+  - description: "The GitHub URL of the commit tagged with v0.2.0-beta."
+    type: url
+    value: "https://github.com/Imageomics/TreeOfLife-toolbox/tree/<commit-hash>" # update post release
+abstract: >-
+  A tool for processing datasets that were downloaded using the distributed-downloader package, 
+  specifically used for constructing the TreeOfLife-200M dataset.
+keywords:
+  - parallel
+  - distributed
+  - processing
+  - url
+  - imageomics
+  - "dataset generation"
+  - "MPI application"
+license: MIT
+version: 0.2.0-beta
+date-released: '2025' # update on release
