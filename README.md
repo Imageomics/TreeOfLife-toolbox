@@ -114,7 +114,7 @@ The following base classes are available:
 
 ## Recommended Citation
 
-If using the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomics/TreeOfLife-200M), please cite this repo, the dataset, and our paper.
+If using the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomics/TreeOfLife-200M), please cite this repo, the dataset, and our [paper](https://doi.org/10.48550/arXiv.2505.23883).
 
 ```
 @software{Kopanev_TreeOfLife-toolbox_2025,
@@ -144,9 +144,10 @@ If using the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomic
   title = {{B}io{CLIP} 2: Emergent Properties from Scaling Hierarchical Contrastive Learning}, 
   author = {Jianyang Gu and Samuel Stevens and Elizabeth G Campolongo and Matthew J Thompson and Net Zhang and Jiaman Wu and Andrei Kopanev and Zheda Mai and Alexander E. White and James Balhoff and Wasila M Dahdul and Daniel Rubenstein and Hilmar Lapp and Tanya Berger-Wolf and Wei-Lun Chao and Yu Su},
   year = {2025},
-  eprint = {},
-  archivePrefix = {arXiv},
-  primaryClass = {cs.CV}
+  eprint={2505.23883},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV},
+  url={https://arxiv.org/abs/2505.23883},
 }
  ```
 
