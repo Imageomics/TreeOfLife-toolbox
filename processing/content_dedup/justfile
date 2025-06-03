@@ -1,0 +1,5 @@
+test:
+    uv run pytest --split=fathomnet --root=$BASE_DIR/TreeOfLife/data dedup
+
+docs:
+    uv run python scripts/docs.py --in-paths dedup experiments.py --out-fpath docs/llms.txt
