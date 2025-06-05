@@ -76,7 +76,7 @@ For example, a job using 4 nodes with 2 GPUs each (8 ranks) produces the followi
 └── predictions_rank7.parquet
 ```
 
-Here's a summary of the available jobs. For job script arguments and implementation details, please refer to the docstrings in the corresponding scripts. Follow the documentation at [`docs/create_processing_environment.md`](../../docs/create_processing_environment.md) to set up the processing environment.
+We provide a summary of the available jobs below. For job script arguments and implementation details, please refer to the docstrings in the corresponding scripts. Follow the documentation at [`docs/create_processing_environment.md`](../../docs/create_processing_environment.md) to set up the processing environment.
 
 ### `run_megadetector_distributed.slurm`
 
@@ -90,5 +90,5 @@ This job uses [`src/run_face_detection_distributed.py`](../../src/processing/run
 
 This job uses [`src/run_clip_distributed.py`](../../src/processing/run_clip_distributed.py) to run OpenAI's [CLIP](https://github.com/openai/CLIP) model for classification tasks. In addition to specifying the Parquet data directory and output location, users must provide a path to a dictionary containing class labels and their corresponding CLIP embeddings. Note: This script uses the CLIP `ViT-L/14@336px` model.
 
-This job was primarily used to identify invalid data—such as files, tags, and boxes—among museum specimen images. You can find support set embedding dictionaries for different museum specimen categories in [`processing/data/support_set_embeddings/museum_specimen`](../../processing/data/support_set_embeddings/museum_specimen).
+This job was primarily used to identify invalid data (e.g., files, tags, and boxes) among museum specimen images. Support set embedding dictionaries for different museum specimen categories are provided in [`processing/data/support_set_embeddings/museum_specimen`](../../processing/data/support_set_embeddings/museum_specimen).
 
