@@ -1,3 +1,43 @@
+"""
+create_pdq_hash.py
+
+This script computes PDQ (Perceptual hash for Digital images and video) hashes for images stored in Parquet files using PySpark. It is designed for distributed and scalable processing of large image datasets.
+
+Features:
+- Reads images and metadata from Parquet files, where images are stored as binary columns.
+- Computes PDQ hashes for each image using the pdqhash library.
+- Processes files in configurable batches to optimize memory and resource usage.
+- Supports checkpointing: maintains a log of processed files to avoid redundant computation and enable resumable runs.
+- Outputs Parquet files containing UUIDs and their corresponding PDQ hashes, organized by batch.
+
+Usage:
+    python create_pdq_hash.py \
+        --target_dir /path/to/parquet/files \
+        --output_dir /path/to/output \
+        [--file_paths /path/to/file_list.txt] \
+        [--processed_files_log_path /path/to/processed_files.log] \
+        [--batch_size 30]
+
+Arguments:
+    --target_dir: Directory containing input Parquet files.
+    --output_dir: Directory to save output Parquet files with PDQ hashes.
+    --file_paths: (Optional) Path to a text file listing specific Parquet files to process.
+    --processed_files_log_path: (Optional) Path to a log file tracking processed files.
+    --batch_size: (Optional) Number of files to process per batch (default: 30).
+
+Requirements:
+    - PySpark
+    - pdqhash
+    - numpy
+    - Pillow (PIL)
+
+Output:
+    For each batch, a subdirectory (e.g., batch_0000) is created in the output directory containing a Parquet file with:
+        - uuid: Unique identifier for each image.
+        - hash_pdq: The computed PDQ hash (as binary).
+    A log file is updated with the paths of processed files.
+
+"""
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.functions import struct, col, udf
