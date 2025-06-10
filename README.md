@@ -1,8 +1,11 @@
 # Tools for TreeOfLife dataset
 
-This repository contains tools for the TreeOfLife dataset. They were created on the basis of distributed downloader.
+This repository contains tools used in creating the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomics/TreeOfLife-200M). They were created on the basis of [distributed-downloader](https://github.com/Imageomics/distributed-downloader), which was used for downloading all the images. Step-by-step instructions to download all of the images are provided in [docs/README](docs/README.md#treeoflife200m-dataset-download-guide).
 
 ## Installation Instructions
+
+Currently, only the portion of this package that is required for downloading all the images in the TreeOfLife-200M dataset is installable. Our other processing code, which is _not_ required to download a copy of the dataset, is provided and described further in the [processing/](processing) directory.[^1]
+[^1]: This processing code will be reworked into installable modules as appropriate over the coming months. 
 
 ### Pip installation
 
@@ -108,3 +111,100 @@ The following base classes are available:
       You will need to implement the `apply_filter` method in your class.
   - `FilterRunnerTool` - inherits from `MPIRunnerTool` and can perform "standard" filtering based on `UUID`s. Works
       only with **downloaded** dataset schema.
+
+## Recommended Citation
+
+If using the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomics/TreeOfLife-200M), please cite this repo, the dataset, and our [paper](https://doi.org/10.48550/arXiv.2505.23883).
+
+```
+@software{Kopanev_TreeOfLife-toolbox_2025,
+  author = {Kopanev, Andrei and Zhang, Net and Gu, Jianyang and Stevens, Samuel and Thompson, Matthew J and Campolongo, Elizabeth G},
+  license = {MIT},
+  month = may,
+  title = {{TreeOfLife-toolbox}},
+  url = {https://github.com/Imageomics/TreeOfLife-toolbox},
+  version = {0.2.0-beta},
+  year = {2025}
+}
+```
+
+```
+@dataset{treeoflife_200m,
+  title = {{T}ree{O}f{L}ife-200{M}}, 
+  author = {Jianyang Gu and Samuel Stevens and Elizabeth G Campolongo and Matthew J Thompson and Net Zhang and Jiaman Wu and Andrei Kopanev and Zheda Mai and Alexander E. White and James Balhoff and Wasila M Dahdul and Daniel Rubenstein and Hilmar Lapp and Tanya Berger-Wolf and Wei-Lun Chao and Yu Su},
+  year = {2025},
+  url = {https://huggingface.co/datasets/imageomics/TreeOfLife-200M},
+  doi = {},
+  publisher = {Hugging Face}
+}
+```
+
+```
+@article{gu2025bioclip,
+  title = {{B}io{CLIP} 2: Emergent Properties from Scaling Hierarchical Contrastive Learning}, 
+  author = {Jianyang Gu and Samuel Stevens and Elizabeth G Campolongo and Matthew J Thompson and Net Zhang and Jiaman Wu and Andrei Kopanev and Zheda Mai and Alexander E. White and James Balhoff and Wasila M Dahdul and Daniel Rubenstein and Hilmar Lapp and Tanya Berger-Wolf and Wei-Lun Chao and Yu Su},
+  year = {2025},
+  eprint={2505.23883},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV},
+  url={https://arxiv.org/abs/2505.23883},
+}
+ ```
+
+Also consider citing [GBIF](https://gbif.org), [BIOSCAN-5M](https://github.com/bioscan-ml/BIOSCAN-5M), [EOL](https://eol.org), and [FathomNet](https://database.fathomnet.org/fathomnet/#/):
+
+```
+@misc{GBIF,
+  title = {{GBIF} Occurrence Download},
+  author = {GBIF.org},
+  doi = {10.15468/DL.BFV433},
+  url = {https://doi.org/10.15468/dl.bfv433},
+  keywords = {GBIF, biodiversity, species occurrences},
+  publisher = {The Global Biodiversity Information Facility},
+  month = {May},
+  year = {2024},
+  copyright = {Creative Commons Attribution Non Commercial 4.0 International}
+}
+
+```
+
+```
+@inproceedings{gharaee2024bioscan5m,
+    title={{BIOSCAN-5M}: A Multimodal Dataset for Insect Biodiversity},
+    author={Zahra Gharaee and Scott C. Lowe and ZeMing Gong and Pablo Millan Arias
+        and Nicholas Pellegrino and Austin T. Wang and Joakim Bruslund Haurum
+        and Iuliia Zarubiieva and Lila Kari and Dirk Steinke and Graham W. Taylor
+        and Paul Fieguth and Angel X. Chang
+    },
+    booktitle={NeurIPS},
+    editor={A. Globerson and L. Mackey and D. Belgrave and A. Fan and U. Paquet and J. Tomczak and C. Zhang},
+    pages={36285--36313},
+    publisher={Curran Associates, Inc.},
+    year={2024},
+    volume={37},
+}
+```
+
+```
+@misc{eol,
+  author = {{Encyclopedia of Life (EOL)}},
+  url = {https://eol.org},
+  note = {Accessed August 2024}
+}
+```
+
+```
+@article{katija_fathomnet_2022,
+	title = {{FathomNet}: {A} global image database for enabling artificial intelligence in the ocean},
+  author = {Katija, Kakani and Orenstein, Eric and Schlining, Brian and Lundsten, Lonny and Barnard, Kevin and Sainz, Giovanna and Boulais, Oceane and Cromwell, Megan and Butler, Erin and Woodward, Benjamin and Bell, Katherine L. C.},
+	journal = {Scientific Reports},
+	volume = {12},
+	number = {1},
+	pages = {15914},
+	issn = {2045-2322},
+	shorttitle = {{FathomNet}},
+	url = {https://www.nature.com/articles/s41598-022-19939-2},
+	doi = {10.1038/s41598-022-19939-2},
+	month = sep,
+	year = {2022},
+}

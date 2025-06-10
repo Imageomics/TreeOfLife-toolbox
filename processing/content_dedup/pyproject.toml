@@ -1,0 +1,31 @@
+[project]
+name = "content-dedup"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beartype>=0.20.0",
+    "bioscan-dataset>=1.2.1",
+    "filprofiler>=2024.11.2",
+    "jaxtyping>=0.2.38",
+    "marimo>=0.12.8",
+    "matplotlib>=3.10.1",
+    "numpy>=2.2.4",
+    "opencv-python>=4.11.0.86",
+    "pdqhash>=0.2.7",
+    "polars>=1.27.1",
+    "pyarrow>=19.0.1",
+    "pyinstrument>=5.0.1",
+    "pytest-benchmark>=5.1.0",
+    "setuptools>=76.0.0",
+    "submitit>=1.5.2",
+    "torch>=2.6.0",
+    "tyro>=0.9.17",
+    "wids>=0.1.11",
+    "wilds>=2.0.0",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["F722", "E501"]

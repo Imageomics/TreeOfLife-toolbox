@@ -1,0 +1,33 @@
+account: ""
+path_to_source_taxa: "path/to/resolved_metadata"
+path_to_image_data: "path/to/data"
+path_to_image_lookup_table: "path/to/lookup_tables/data" # Can greatly speed up initial steps, should include `uuid` and `path` columns, if you don't have it - leave null
+path_to_output_folder: "path/to/224x224"
+path_to_webdataset_output_folder: null # Write a path where dataset will be created, otherwise leave null - it would be created in default location within `output_structure`
+
+scripts:
+  # Wrapper scripts to submit jobs to the cluster
+  t2w_submitter: "path/to/scripts/t2w_submit.sh"
+  # t2w scripts
+  t2w_filter_script: "path/to/scripts/tol2webdataset/t2w_filter.slurm"
+  t2w_scheduling_script: "path/to/scripts/tol2webdataset/t2w_scheduler.slurm"
+  t2w_worker_script: "path/to/scripts/tol2webdataset/t2w_worker.slurm"
+  t2w_verification_script: "path/to/scripts/tol2webdataset/t2w_verifier.slurm"
+
+# Structure of the output folder that will be created automatically
+output_structure:
+  metadata_folder: "metadata"
+  logs_folder: "logs"
+  verification_folder: "verification"
+  dataset_output_folder: "tar_dataset"
+
+# Parameters for the converter
+t2w_parameters:
+  num_runners: 10
+  max_nodes_per_runner: 15
+  workers_per_node: 6
+  cpu_per_worker: 6
+  resize_size: 224 # 0 to use original size
+  shard_size: 10000
+  shard_count_limit: 0 # how many shards will be created at most (0 to disable)
+  included_sources: null

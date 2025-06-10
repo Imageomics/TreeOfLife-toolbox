@@ -70,9 +70,9 @@ keywords = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Imageomics/distributed-downloader"
-Repository = "https://github.com/Imageomics/distributed-downloader.git"
-"Bug Tracker" = "https://github.com/Imageomics/distributed-downloader/issues"
+Homepage = "https://github.com/Imageomics/TreeOfLife-toolbox"
+Repository = "https://github.com/Imageomics/TreeOfLife-toolbox.git"
+"Bug Tracker" = "https://github.com/Imageomics/TreeOfLife-toolbox/issues"
 
 [project.scripts]
 tree_of_life_toolbox = "TreeOfLife_toolbox.main.main:main"
