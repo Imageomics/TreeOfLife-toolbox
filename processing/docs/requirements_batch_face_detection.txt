@@ -40,4 +40,4 @@ torchvision==0.22.0
 triton==3.3.0
 typing-extensions==4.13.2
 tzdata==2025.2
-urllib3==2.4.0
+urllib3==2.5.0
