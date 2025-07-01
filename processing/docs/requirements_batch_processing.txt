@@ -64,7 +64,7 @@ opencv-python-headless==4.10.0.84
 orjson==3.10.18
 packaging==25.0
 pandas==2.2.3
-pillow==11.2.1
+pillow==11.3.0
 pillow-heif==0.22.0
 protobuf==6.30.2
 psutil==7.0.0
