@@ -23,7 +23,7 @@ Be sure to set the appropriate `BASE_PATH` value at the top of each notebook.
 
 Be sure to set appropriate `BASE_DIR` variables in `scripts/mongo/` and `scripts/processing/` directories, the latter of which also requires replacing `YOUR_ACCOUNT` with the appropriate account code.
 
-[BioCLIP 2 text embeddings of TreeOfLife-200M](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/txt_emb_species.npy) were generated with [`make_txt_embedding.py`](scripts/make_txt_embedding.py),  using the [`txt_emb_species.json`](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/txt_emb_species.json) to provide the species names. More information about the `JSON` is provided in the [TreeOfLife-200M `embeddings/README`](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/tree/main/embeddings/README.md).
+[BioCLIP 2 text embeddings of TreeOfLife-200M](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/txt_emb_species.npy) were generated with [`make_txt_embedding.py`](scripts/make_txt_embedding.py),  using the [`txt_emb_species.json`](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/txt_emb_species.json) to provide the species names. More information about the `JSON` is provided in the [TreeOfLife-200M `embeddings/README`](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/README.md).
 
 ## Webdataset Construction
 
