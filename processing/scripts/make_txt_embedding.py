@@ -44,8 +44,13 @@ def write_txt_features(all_names):
             )
             continue
 
-        names = all_names[start:end]
-        names = [' '.join(name[0]) + ' ' + name[1] for name in names]
+        tmp_names = all_names[start:end]
+        names = []
+        for name in tmp_names:
+            if len(name[1]) == 0:
+                names.append(' '.join(name[0]))
+            else:
+                names.append(' '.join(name[0]) + ' with common name ' + name[1])
 
         txts = [
             template(name) for name in names for template in openai_imagenet_template
