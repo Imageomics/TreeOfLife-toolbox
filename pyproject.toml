@@ -30,6 +30,7 @@ dependencies = [
     "cramjam",
     "cython",
     "fsspec",
+    "h5py",
     "inflate64",
     "mpi4py",
     "multivolumefile",
