@@ -266,7 +266,6 @@ class ParquetToHDF5Runner(MPIRunnerTool):
         self.image_format = "webp"
         self.webp_method = 6
         self.webp_lossless = True
-        self.webp_quality = 100 # Redundant, should exclude
 
         # Processing settings
         self.num_cores = self.config["tools_parameters"].get("cpu_per_worker", 32)
@@ -356,12 +355,11 @@ class ParquetToHDF5Runner(MPIRunnerTool):
         buffer = io.BytesIO()
         img.save(buffer, format='WebP',
                 lossless=self.webp_lossless,
-                quality=self.webp_quality,
                 method=self.webp_method)
         return buffer.getvalue()
 
     @staticmethod
-    def convert_chunk(chunk_id: int, records: List[dict], output_path: Path, image_format: str, webp_method: int, webp_lossless: bool, webp_quality: int) -> Tuple[int, int, int, int, int]:
+    def convert_chunk(chunk_id: int, records: List[dict], output_path: Path, image_format: str, webp_method: int, webp_lossless: bool) -> Tuple[int, int, int, int, int]:
         """
         Convert a chunk of records to HDF5.
 
@@ -408,7 +406,6 @@ class ParquetToHDF5Runner(MPIRunnerTool):
                     buffer = io.BytesIO()
                     img.save(buffer, format='WebP',
                             lossless=webp_lossless,
-                            quality=webp_quality,
                             method=webp_method)
                     compressed_bytes = buffer.getvalue()
 
@@ -506,7 +503,7 @@ class ParquetToHDF5Runner(MPIRunnerTool):
                 chunk_df = df.slice(start_idx, end_idx - start_idx)
                 records = chunk_df.to_dicts()
                 output_path = chunk_dir / f"chunk_{i:02d}_images.h5"
-                tasks.append((i, records, output_path, self.image_format, self.webp_method, self.webp_lossless, self.webp_quality))
+                tasks.append((i, records, output_path, self.image_format, self.webp_method, self.webp_lossless))
 
             # Process chunks in parallel
             total_successful = 0
