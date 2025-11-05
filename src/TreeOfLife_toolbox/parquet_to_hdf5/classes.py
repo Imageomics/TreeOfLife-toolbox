@@ -3,7 +3,7 @@ Parquet to HDF5 WebP conversion tool for TreeOfLife dataset.
 
 This tool converts TreeOfLife Parquet files (containing raw image bytes) into:
 - HDF5 files with UUID-indexed lossless WebP compressed images
-- Separate Parquet metadata files (without image data)
+- Separate Parquet metadata files (without image data) for indexing
 
 Uses hardcoded WebP lossless compression with method=6 for optimal space efficiency.
 """
@@ -11,10 +11,9 @@ Uses hardcoded WebP lossless compression with method=6 for optimal space efficie
 import os
 import glob
 import time
-import hashlib
+import uuid as uuidlib
 from pathlib import Path
-from typing import List, Tuple, Optional
-import subprocess
+from typing import List, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import pandas as pd
@@ -23,13 +22,111 @@ import polars as pl
 import h5py
 from PIL import Image
 import io
-from tqdm import tqdm
 
 from TreeOfLife_toolbox.main.config import Config
 from TreeOfLife_toolbox.main.filters import SparkFilterToolBase, FilterRegister
 from TreeOfLife_toolbox.main.runners import MPIRunnerTool, RunnerRegister
 from TreeOfLife_toolbox.main.schedulers import DefaultScheduler, SchedulerRegister
 import pyspark.sql.functions as func
+
+
+def normalize_uuid_stdlib(s: str, *, strict_v4: bool = False) -> Tuple[str | None, str]:
+    """
+    Normalize a UUID-like string using the stdlib 'uuid' module.
+
+    Args:
+        s (str): Input UUID string (may be missing hyphens or have mixed case)
+        strict_v4 (bool): Whether to enforce UUID4 version/variant requirements
+
+    Returns:
+        Tuple[str | None, str]: (normalized_uuid, status)
+            - normalized_uuid: Properly formatted UUID string (lowercase with hyphens)
+            - status: One of 'valid', 'fixed', 'invalid'
+                - 'valid': input was already canonical lowercase with hyphens (no change)
+                - 'fixed': input was parseable but required reformatting (case/hyphens)
+                - 'invalid': could not be parsed, failed strict_v4 checks, or was null
+
+    Note: Even properly hyphenated UUIDs get status 'fixed' if they contain uppercase letters,
+    since canonical format is lowercase.
+    """
+    # Explicit null handling for Polars compatibility
+    if s is None:
+        return None, "invalid"
+
+    if not isinstance(s, str):
+        return s, "invalid"
+
+    s_stripped = s.strip()
+
+    try:
+        # Try canonical/typical inputs first (handles hyphenated UUIDs)
+        u = uuidlib.UUID(s_stripped)
+    except (ValueError, AttributeError):
+        # Try hyphen-less 32-hex format
+        try:
+            if len(s_stripped) == 32:
+                u = uuidlib.UUID(hex=s_stripped)
+            else:
+                return s, "invalid"
+        except (ValueError, AttributeError):
+            return s, "invalid"
+
+    # Optional strict UUID4 validation
+    if strict_v4:
+        if not (u.version == 4 and u.variant == uuidlib.RFC_4122):
+            return s, "invalid"
+
+    # Get canonical lowercase format with hyphens
+    normalized = str(u)
+    status = "valid" if normalized == s_stripped else "fixed"
+
+    return normalized, status
+
+
+def normalize_dataframe_uuids(df: pl.DataFrame, uuid_col: str = "uuid", strict_v4: bool = False) -> Tuple[pl.DataFrame, dict]:
+    """
+    Apply UUID normalization to a Polars DataFrame using stdlib uuid module.
+
+    Args:
+        df (pl.DataFrame): Input DataFrame containing UUID column
+        uuid_col (str): Name of the UUID column to normalize
+        strict_v4 (bool): Whether to enforce strict UUID4 validation
+
+    Returns:
+        Tuple[pl.DataFrame, dict]: (updated_dataframe, statistics)
+    """
+    if uuid_col not in df.columns:
+        return df, {"valid": 0, "fixed": 0, "invalid": 0, "total": len(df)}
+
+    # Track statistics
+    stats = {"valid": 0, "fixed": 0, "invalid": 0, "total": len(df)}
+
+    # Apply normalization using map_elements for clarity and correctness
+    def apply_normalize(uuid_str):
+        normalized, status = normalize_uuid_stdlib(uuid_str, strict_v4=strict_v4)
+        return {"normalized": normalized, "status": status}
+
+    # Apply normalization and extract results
+    result_df = df.with_columns([
+        pl.col(uuid_col).map_elements(apply_normalize, return_dtype=pl.Struct([
+            pl.Field("normalized", pl.Utf8),
+            pl.Field("status", pl.Utf8)
+        ])).alias("_uuid_result")
+    ]).with_columns([
+        pl.col("_uuid_result").struct.field("normalized").alias(uuid_col),
+        pl.col("_uuid_result").struct.field("status").alias("_uuid_status")
+    ])
+
+    # Calculate statistics
+    status_counts = result_df.group_by("_uuid_status").agg(pl.len().alias("count")).to_dict(as_series=False)
+    for status_val, count_val in zip(status_counts.get("_uuid_status", []), status_counts.get("count", [])):
+        if status_val in stats:
+            stats[status_val] = count_val
+
+    # Clean up temporary columns
+    result_df = result_df.drop(["_uuid_result", "_uuid_status"])
+
+    return result_df, stats
 
 
 @FilterRegister("parquet_to_hdf5")
@@ -169,7 +266,7 @@ class ParquetToHDF5Runner(MPIRunnerTool):
         self.image_format = "webp"
         self.webp_method = 6
         self.webp_lossless = True
-        self.webp_quality = 100
+        self.webp_quality = 100 # Redundant, should exclude
 
         # Processing settings
         self.num_cores = self.config["tools_parameters"].get("cpu_per_worker", 32)
@@ -205,14 +302,15 @@ class ParquetToHDF5Runner(MPIRunnerTool):
             # Log the result
             if result["success"]:
                 self.logger.info(
-                    f"✅ Converted {result['input_path']}: "
+                    f"Converted {result['input_path']}: "
                     f"{result['successful_images']} images, "
-                    f"{result['compression_ratio']:.1f}:1 compression"
+                    f"{result['compression_ratio']:.1f}:1 compression, "
+                    f"UUIDs: {result['uuid_fixed']} fixed"
                 )
                 successful_count += 1
             else:
                 self.logger.error(
-                    f"❌ Failed {result['input_path']}: {result['error_message']}"
+                    f"Failed {result['input_path']}: {result['error_message']}"
                 )
 
             # Store verification data for later writing (to avoid pickle issues)
@@ -283,11 +381,11 @@ class ParquetToHDF5Runner(MPIRunnerTool):
             images_group = h5f.create_group("images")
 
             for rec in records:
-                uuid = rec.get("uuid")
+                image_uuid = rec.get("uuid")
                 image_bytes = rec.get("image")
                 dims = rec.get("resized_size")
 
-                if not all([uuid, image_bytes, dims]) or len(dims) < 2:
+                if not all([image_uuid, image_bytes, dims]) or len(dims) < 2:
                     failed_images += 1
                     continue
 
@@ -319,13 +417,13 @@ class ParquetToHDF5Runner(MPIRunnerTool):
                     # Store in HDF5
                     compressed_array = np.frombuffer(compressed_bytes, dtype=np.uint8)
                     images_group.create_dataset(
-                        uuid,
+                        image_uuid,
                         data=compressed_array,
                         fletcher32=True
                     )
                     successful_images += 1
 
-                except Exception as e:
+                except Exception:
                     failed_images += 1
 
             # Store statistics
@@ -354,7 +452,10 @@ class ParquetToHDF5Runner(MPIRunnerTool):
             "total_images": 0,
             "successful_images": 0,
             "failed_images": 0,
-            "compression_ratio": 0
+            "compression_ratio": 0,
+            "uuid_valid": 0,
+            "uuid_fixed": 0,
+            "uuid_invalid": 0
         }
 
         try:
@@ -379,6 +480,18 @@ class ParquetToHDF5Runner(MPIRunnerTool):
             if total_records == 0:
                 result["error_message"] = "No records found in Parquet file"
                 return result
+
+            # Normalize UUIDs to handle malformatted entries (missing hyphens)
+            df, uuid_stats = normalize_dataframe_uuids(df, uuid_col="uuid", strict_v4=False)
+
+            # Log UUID normalization statistics
+            self.logger.info(f"UUID normalization stats: {uuid_stats['valid']} valid, "
+                           f"{uuid_stats['fixed']} fixed, {uuid_stats['invalid']} invalid")
+
+            # Update result with UUID statistics
+            result["uuid_valid"] = uuid_stats["valid"]
+            result["uuid_fixed"] = uuid_stats["fixed"]
+            result["uuid_invalid"] = uuid_stats["invalid"]
 
             # Split into chunks for parallel processing
             chunk_size = (total_records + self.num_cores - 1) // self.num_cores
@@ -461,8 +574,8 @@ class ParquetToHDF5Runner(MPIRunnerTool):
                 with h5py.File(chunk_file, 'r') as chunk_f:
                     # Copy all images
                     chunk_images = chunk_f['images']
-                    for uuid in chunk_images.keys():
-                        chunk_f.copy(f'images/{uuid}', images_group)
+                    for this_uuid in chunk_images.keys():
+                        chunk_f.copy(f'images/{this_uuid}', images_group)
 
                     # Accumulate statistics
                     total_images += chunk_f.attrs.get('successful_images', 0)
