@@ -1,0 +1,54 @@
+{
+    "creators": [
+        {
+            "name": "Kopanev, Andrei",
+            "affiliation": "The Ohio State University"
+        },
+        {
+            "name": "Zhang, Net",
+            "affiliation": "The Ohio State University"
+        },
+        {
+            "name": "Gu, Jianyang",
+            "affiliation": "The Ohio State University"
+        },
+        {
+            "name": "Stevens, Samuel",
+            "affiliation": "The Ohio State University"
+        },
+        {
+            "name": "Thompson, Matthew J.",
+            "affiliation": "The Ohio State University"
+        },
+        {
+            "name": "Campolongo, Elizabeth G.",
+            "affiliation": "The Ohio State University"
+        }
+    ],
+    "description": "A tool for processing datasets that were downloaded using the distributed-downloader package, specifically used for constructing the TreeOfLife-200M dataset.",
+    "keywords": [
+        "biology",
+        "CV",
+        "imageomics",
+        "species",
+        "images",
+        "parallel",
+        "distributed",
+        "processing",
+        "url",
+        "imageomics",
+        "dataset generation",
+        "MPI application"
+    ],
+    "license": {
+        "id": "MIT"
+    },
+    "publication_date": "2025-11-14",
+    "title": "TreeOfLife-toolbox",
+    "version": "0.4.0-beta",
+    "grants": [
+        {
+            "id": "021nxhr62::2118240"
+        }
+    ]
+}
