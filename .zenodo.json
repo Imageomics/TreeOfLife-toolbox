@@ -36,13 +36,13 @@
         "distributed",
         "processing",
         "url",
-        "dataset generation",
-        "MPI application",
+        "dataset-generation",
+        "MPI-application",
         "face-detection",
-        "image filtering",
+        "image-filtering",
         "animal-detection",
-        "specimen records",
-        "citizen science",
+        "specimen-records",
+        "citizen-science",
         "embedding-generation"
     ],
     "license": {

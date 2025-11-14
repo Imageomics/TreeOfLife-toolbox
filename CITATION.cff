@@ -34,19 +34,19 @@ abstract: >-
   A tool for processing datasets that were downloaded using the distributed-downloader package, 
   specifically used for constructing the TreeOfLife-200M dataset.
 keywords:
-  - parallel
-  - distributed
-  - processing
-  - url
-  - imageomics
-  - "dataset generation"
-  - "MPI application"
+  - "parallel"
+  - "distributed"
+  - "processing"
+  - "url"
+  - "imageomics"
+  - "dataset-generation"
+  - "MPI-application"
   - "face-detection"
-  - "image filtering"
+  - "image-filtering"
   - "animal-detection"
-  - "specimen records"
-  - "citizen science"
-  - embedding-generation
+  - "specimen-records"
+  - "citizen-science"
+  - "embedding-generation"
 license: MIT
 version: 0.4.0-beta
 date-released: '2025-11-14'
