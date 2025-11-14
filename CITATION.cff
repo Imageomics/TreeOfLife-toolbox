@@ -46,7 +46,6 @@ keywords:
   - "animal-detection"
   - "specimen records"
   - "citizen science"
-  - imageomics
   - embedding-generation
 license: MIT
 version: 0.4.0-beta
