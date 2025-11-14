@@ -38,7 +38,13 @@
         "url",
         "imageomics",
         "dataset generation",
-        "MPI application"
+        "MPI application",
+        "face-detection",
+        "image filtering",
+        "animal-detection",
+        "specimen records",
+        "citizen science",
+        "embedding-generation"
     ],
     "license": {
         "id": "MIT"
