@@ -120,10 +120,10 @@ If using the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomic
 @software{Kopanev_TreeOfLife-toolbox_2025,
   author = {Kopanev, Andrei and Zhang, Net and Gu, Jianyang and Stevens, Samuel and Thompson, Matthew J and Campolongo, Elizabeth G},
   license = {MIT},
-  month = may,
+  month = nov,
   title = {{TreeOfLife-toolbox}},
   url = {https://github.com/Imageomics/TreeOfLife-toolbox},
-  version = {0.2.0-beta},
+  version = {0.4.0-beta},
   year = {2025}
 }
 ```
