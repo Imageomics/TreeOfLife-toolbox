@@ -1,4 +1,4 @@
-# Tools for TreeOfLife dataset
+# Tools for TreeOfLife dataset [![DOI](https://zenodo.org/badge/933844468.svg)](https://doi.org/10.5281/zenodo.17612630)
 
 This repository contains tools used in creating the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomics/TreeOfLife-200M). They were created on the basis of [distributed-downloader](https://github.com/Imageomics/distributed-downloader), which was used for downloading all the images. Step-by-step instructions to download all of the images are provided in [docs/README](docs/README.md#treeoflife200m-dataset-download-guide).
 
@@ -124,17 +124,18 @@ If using the [TreeOfLife-200M dataset](https://huggingface.co/datasets/imageomic
   title = {{TreeOfLife-toolbox}},
   url = {https://github.com/Imageomics/TreeOfLife-toolbox},
   version = {0.4.0-beta},
-  year = {2025}
+  year = {2025},
+  doi = {10.5281/zenodo.17612630}
 }
 ```
 
 ```
 @dataset{treeoflife_200m,
-  title = {{T}ree{O}f{L}ife-200{M}}, 
+  title = {{T}ree{O}f{L}ife-200{M} (Revision a8f38b4)}, 
   author = {Jianyang Gu and Samuel Stevens and Elizabeth G Campolongo and Matthew J Thompson and Net Zhang and Jiaman Wu and Andrei Kopanev and Zheda Mai and Alexander E. White and James Balhoff and Wasila M Dahdul and Daniel Rubenstein and Hilmar Lapp and Tanya Berger-Wolf and Wei-Lun Chao and Yu Su},
   year = {2025},
   url = {https://huggingface.co/datasets/imageomics/TreeOfLife-200M},
-  doi = {},
+  doi = {10.57967/hf/6786},
   publisher = {Hugging Face}
 }
 ```
