@@ -6,12 +6,11 @@
 # Function to display usage
 usage() {
     cat << EOF
-Usage: $0 --source-root SOURCE_ROOT --source-group SOURCE_GROUP --dest-root DEST_ROOT [--email EMAIL]
+Usage: $0 --source-root SOURCE_ROOT --dest-root DEST_ROOT [--email EMAIL]
 
 Required arguments:
-    --source-root    Source root directory (e.g., /path/to/data)
-    --source-group   Source group name (e.g., gbif_group_20)
-    --dest-root      Destination root directory (e.g., /path/to/data)
+    --source-root    Source directory including source= prefix (e.g., /path/to/data/source=gbif_group_20)
+    --dest-root      Destination directory including source= prefix (e.g., /path/to/data/source=gbif)
 
 Optional arguments:
     --email          Email address for success notification
@@ -21,7 +20,6 @@ EOF
 
 # Parse command line arguments
 SOURCE_ROOT=""
-SOURCE_GROUP=""
 DEST_ROOT=""
 EMAIL=""
 
@@ -29,10 +27,6 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --source-root)
             SOURCE_ROOT="$2"
-            shift 2
-            ;;
-        --source-group)
-            SOURCE_GROUP="$2"
             shift 2
             ;;
         --dest-root)
@@ -56,19 +50,16 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required arguments
-if [[ -z "$SOURCE_ROOT" || -z "$SOURCE_GROUP" || -z "$DEST_ROOT" ]]; then
+if [[ -z "$SOURCE_ROOT" || -z "$DEST_ROOT" ]]; then
     echo "Error: Missing required arguments"
     echo ""
     usage
     exit 1
 fi
 
-# Build source and destination paths from configuration
-SOURCE_BASE="$SOURCE_ROOT/source=$SOURCE_GROUP"
-
-# Derive destination by removing _group_XX pattern from the group name only
-DEST_GROUP=$(echo "$SOURCE_GROUP" | sed 's/_group_[0-9]\+$//')
-DEST_BASE="$DEST_ROOT/source=$DEST_GROUP"
+# Use the full paths directly (no building required)
+SOURCE_BASE="$SOURCE_ROOT"
+DEST_BASE="$DEST_ROOT"
 
 # Functions for verification
 verify_sizes() {
@@ -154,15 +145,18 @@ send_success_email() {
     local size_gb=$((total_size / 1024 / 1024 / 1024))
     local size_mb=$(((total_size % (1024 * 1024 * 1024)) / 1024 / 1024))
 
+    # Extract source group name from path for display
+    local source_group=$(basename "$source_base")
+
     # Create email content
-    local subject="TreeOfLife Copy Success: $SOURCE_GROUP"
+    local subject="TreeOfLife Copy Success: $source_group"
     local body="TreeOfLife Data Copy and Validation - SUCCESS
 
 ==========================================
 OPERATION SUMMARY
 ==========================================
 Status: SUCCESS - All files copied and verified
-Source Group: $SOURCE_GROUP
+Source Group: $source_group
 Execution Time: ${hours}h ${minutes}m ${seconds}s
 Completed: $(date)
 

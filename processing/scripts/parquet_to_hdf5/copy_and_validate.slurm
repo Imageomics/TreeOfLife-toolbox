@@ -15,12 +15,11 @@
 # Function to display usage
 usage() {
     cat << EOF
-Usage: sbatch [SLURM_OPTIONS] $0 --source-root SOURCE_ROOT --source-group SOURCE_GROUP --dest-root DEST_ROOT [--email EMAIL]
+Usage: sbatch [SLURM_OPTIONS] $0 --source-root SOURCE_ROOT --dest-root DEST_ROOT [--email EMAIL]
 
 Required arguments:
-    --source-root    Source root directory (e.g., /path/to/data)
-    --source-group   Source group name (e.g., gbif_group_20)
-    --dest-root      Destination root directory (e.g., /path/to/data)
+    --source-root    Source directory including source= prefix (e.g., /path/to/data/source=gbif_group_20)
+    --dest-root      Destination directory including source= prefix (e.g., /path/to/data/source=gbif)
 
 Optional arguments:
     --email          Email address for success notification
@@ -35,7 +34,6 @@ EOF
 
 # Parse command line arguments
 SOURCE_ROOT=""
-SOURCE_GROUP=""
 DEST_ROOT=""
 EMAIL=""
 
@@ -43,10 +41,6 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --source-root)
             SOURCE_ROOT="$2"
-            shift 2
-            ;;
-        --source-group)
-            SOURCE_GROUP="$2"
             shift 2
             ;;
         --dest-root)
@@ -70,7 +64,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required arguments
-if [[ -z "$SOURCE_ROOT" || -z "$SOURCE_GROUP" || -z "$DEST_ROOT" ]]; then
+if [[ -z "$SOURCE_ROOT" || -z "$DEST_ROOT" ]]; then
     echo "Error: Missing required arguments"
     echo ""
     usage
@@ -78,9 +72,8 @@ if [[ -z "$SOURCE_ROOT" || -z "$SOURCE_GROUP" || -z "$DEST_ROOT" ]]; then
 fi
 
 # Validate that source directory exists
-SOURCE_BASE="$SOURCE_ROOT/source=$SOURCE_GROUP"
-if [[ ! -d "$SOURCE_BASE" ]]; then
-    echo "Error: Source directory does not exist: $SOURCE_BASE"
+if [[ ! -d "$SOURCE_ROOT" ]]; then
+    echo "Error: Source directory does not exist: $SOURCE_ROOT"
     exit 1
 fi
 
@@ -95,7 +88,6 @@ echo "============================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Started: $(date)"
 echo "Source Root: $SOURCE_ROOT"
-echo "Source Group: $SOURCE_GROUP"
 echo "Dest Root: $DEST_ROOT"
 echo "Email: ${EMAIL:-"(none)"}"
 echo "============================================="
@@ -106,7 +98,6 @@ echo "============================================="
 # Execute the copy and validate script with parameters
 bash "$SCRIPT_DIR/copy_and_validate.sh" \
     --source-root "$SOURCE_ROOT" \
-    --source-group "$SOURCE_GROUP" \
     --dest-root "$DEST_ROOT" \
     ${EMAIL:+--email "$EMAIL"}
 
