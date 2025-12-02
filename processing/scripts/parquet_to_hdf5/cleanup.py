@@ -198,6 +198,28 @@ def ensure_uuid_parity(
         error("Dest UUID set does not match summary")
 
 
+def ensure_dest_metadata_completeness(
+    summary_uuids: Set[str],
+    source_map: Dict[str, Dict[str, List[str]]],
+    dest_map: Dict[str, Dict[str, List[str]]],
+) -> None:
+    for uuid in sorted(summary_uuids):
+        s_meta = ensure_single("source metadata", source_map.get(uuid, {}).get("metadata", []), uuid)
+        s_img = ensure_single("source images", source_map.get(uuid, {}).get("images", []), uuid)
+        d_meta = ensure_single("dest metadata", dest_map.get(uuid, {}).get("metadata", []), uuid)
+        d_img = ensure_single("dest images", dest_map.get(uuid, {}).get("images", []), uuid)
+        if os.path.basename(s_meta) != os.path.basename(d_meta):
+            error(
+                "Dest metadata filename mismatch for "
+                f"{uuid}: {os.path.basename(d_meta)} vs {os.path.basename(s_meta)}"
+            )
+        if os.path.basename(s_img) != os.path.basename(d_img):
+            error(
+                "Dest image filename mismatch for "
+                f"{uuid}: {os.path.basename(d_img)} vs {os.path.basename(s_img)}"
+            )
+
+
 def manifest(entries: Sequence[Tuple[str, str, str, str]]) -> Tuple[List[str], str]:
     formatted = [f"{uuid}|{loc}|{kind}|{path}" for uuid, loc, kind, path in entries]
     h = hashlib.sha256()
@@ -316,6 +338,7 @@ def main() -> int:
     source_map = scan_servers(source_servers)
     dest_map = scan_servers(dest_servers)
     ensure_uuid_parity(summary_uuids, source_map, dest_map)
+    ensure_dest_metadata_completeness(summary_uuids, source_map, dest_map)
 
     source_entries, dest_entries = build_deletion_plan(summary_uuids, source_map, dest_map)
     total_entries = source_entries + dest_entries
