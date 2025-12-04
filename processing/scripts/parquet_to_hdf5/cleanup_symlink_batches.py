@@ -278,15 +278,13 @@ def manifest(entries: Sequence[Tuple[str, str, str, str]]) -> Tuple[List[str], s
 def write_dry_run(
     args: argparse.Namespace,
     summary_path: str,
+    batch_label: str,
     source_entries: List[Tuple[str, str, str, str]],
     dest_entries: List[Tuple[str, str, str, str]],
 ) -> None:
-    csv_path = summary_path.replace(
-        "_verification_summary.json", "_cleanup_dry_run_files.csv"
-    )
-    json_path = summary_path.replace(
-        "_verification_summary.json", "_cleanup_dry_run_summary.json"
-    )
+    summary_dir = os.path.dirname(os.path.abspath(summary_path))
+    csv_path = os.path.join(summary_dir, f"{batch_label}_cleanup_dry_run_files.csv")
+    json_path = os.path.join(summary_dir, f"{batch_label}_cleanup_dry_run_summary.json")
     total_entries = source_entries + dest_entries
     _, manifest_hash = manifest(total_entries)
 
@@ -322,10 +320,9 @@ def write_dry_run(
     print(f"Dry-run CSV: {csv_path}")
 
 
-def load_dry_run(summary_path: str) -> dict:
-    dry_run = summary_path.replace(
-        "_verification_summary.json", "_cleanup_dry_run_summary.json"
-    )
+def load_dry_run(summary_path: str, batch_label: str) -> dict:
+    summary_dir = os.path.dirname(os.path.abspath(summary_path))
+    dry_run = os.path.join(summary_dir, f"{batch_label}_cleanup_dry_run_summary.json")
     if not os.path.exists(dry_run):
         error("Dry-run summary missing; run with --dry-run first")
     return load_json(dry_run)
@@ -363,6 +360,7 @@ def main() -> int:
     source_root = os.path.abspath(args.source_root)
     dest_root = os.path.abspath(args.dest_root)
     logs_dir = os.path.abspath(args.logs)
+    batch_label = os.path.basename(source_root.rstrip(os.sep))
 
     for path, label in (
         (source_root, "source-root"),
@@ -411,10 +409,10 @@ def main() -> int:
     total_entries = source_entries + dest_entries
 
     if args.dry_run:
-        write_dry_run(args, summary_path, source_entries, dest_entries)
+        write_dry_run(args, summary_path, batch_label, source_entries, dest_entries)
         return 0
 
-    dry_run_data = load_dry_run(summary_path)
+    dry_run_data = load_dry_run(summary_path, batch_label)
     recorded_args = dry_run_data.get("args", {})
     current_args = {
         "source_root": source_root,
