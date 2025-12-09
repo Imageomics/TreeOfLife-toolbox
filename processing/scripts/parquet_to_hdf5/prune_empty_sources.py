@@ -2,15 +2,10 @@
 """
 Identify and optionally delete empty source data_<uuid>.parquet files.
 
-The script is intended to run in two phases:
-
-    1) --dry-run
-         Scan the provided source tree, record every legacy parquet whose
-         row count is zero, and write CSV/JSON reports beneath --logs.
-
-    2) --yes-delete
-         Read the previously generated CSV plan and delete the files,
-         writing an updated summary describing what was removed.
+Typical workflow:
+  1. Run with --dry-run to record every zero-row parquet and review the CSV plan.
+  2. Once satisfied, rerun with --yes-delete. Add --prune-empty-dirs to remove
+     any server=* directories that would become empty once those files are gone.
 """
 
 from __future__ import annotations
@@ -22,7 +17,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Set
 
 import pyarrow.parquet as pq
 
@@ -67,6 +62,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Optional explicit path to a dry-run CSV plan (defaults to <logs>/<basename>_empty_sources.csv).",
     )
+    parser.add_argument(
+        "--prune-empty-dirs",
+        action="store_true",
+        help="Consider server=* directories for removal when they become empty.",
+    )
     return parser.parse_args()
 
 
@@ -82,8 +82,7 @@ def find_server_name(path: Path) -> str:
 
 
 def iter_source_parquets(source_root: Path) -> Iterable[Path]:
-    glob_pattern = "data_*.parquet"
-    for path in sorted(source_root.rglob(glob_pattern)):
+    for path in sorted(source_root.rglob("data_*.parquet")):
         name = path.name
         if name.endswith("_metadata.parquet"):
             continue
@@ -100,13 +99,11 @@ def count_rows(parquet_path: Path) -> Optional[int]:
         return None
 
 
-def detect_empty_files(source_root: Path) -> List[EmptyParquet]:
+def detect_empty_files(parquet_paths: Iterable[Path]) -> List[EmptyParquet]:
     records: List[EmptyParquet] = []
-    for parquet_path in iter_source_parquets(source_root):
+    for parquet_path in parquet_paths:
         rows = count_rows(parquet_path)
-        if rows is None:
-            continue
-        if rows > 0:
+        if rows is None or rows > 0:
             continue
         uuid = parquet_path.stem.replace("data_", "", 1)
         records.append(
@@ -137,13 +134,21 @@ def write_csv(records: List[EmptyParquet], csv_path: Path) -> None:
             writer.writerow([rec.uuid, rec.server, str(rec.path), rec.size_bytes, rec.row_count])
 
 
-def write_summary(path: Path, *, scanned: int, empty: int, deleted: int = 0) -> None:
+def write_summary(
+    path: Path,
+    *,
+    scanned: int,
+    empty: int,
+    deleted: int = 0,
+    pruned_dirs: int = 0,
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     summary = {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "total_files_scanned": scanned,
         "empty_files": empty,
         "deleted_files": deleted,
+        "empty_directories_removed": pruned_dirs,
     }
     with path.open("w", encoding="utf-8") as handle:
         json.dump(summary, handle, indent=2)
@@ -180,6 +185,38 @@ def delete_files(records: List[EmptyParquet]) -> List[EmptyParquet]:
     return removed
 
 
+def _normalize_paths(paths: Iterable[Path]) -> Set[Path]:
+    return {p.resolve() for p in paths}
+
+
+def find_empty_server_dirs(source_root: Path, pretend_removed: Optional[Set[Path]] = None) -> List[Path]:
+    pretend = pretend_removed or set()
+    empty_dirs: List[Path] = []
+    for server_dir in sorted(source_root.glob("server=*")):
+        if not server_dir.is_dir():
+            continue
+        try:
+            entries = list(server_dir.iterdir())
+        except FileNotFoundError:
+            continue
+        remaining = [entry for entry in entries if entry.resolve() not in pretend]
+        if remaining:
+            continue
+        empty_dirs.append(server_dir)
+    return empty_dirs
+
+
+def prune_empty_server_dirs(source_root: Path) -> List[Path]:
+    removed: List[Path] = []
+    for server_dir in find_empty_server_dirs(source_root):
+        try:
+            server_dir.rmdir()
+            removed.append(server_dir)
+        except OSError:
+            continue
+    return removed
+
+
 def main() -> int:
     args = parse_args()
     source_root: Path = args.source_root.expanduser().resolve()
@@ -189,6 +226,8 @@ def main() -> int:
         error(f"Source root is not a directory: {source_root}")
     if not args.dry_run and not args.yes_delete:
         error("Specify at least one of --dry-run or --yes-delete")
+    if args.prune_empty_dirs and not args.yes_delete:
+        print("NOTE: --prune-empty-dirs only takes effect when --yes-delete is provided.")
 
     if args.plan_file:
         csv_path = args.plan_file.expanduser().resolve()
@@ -196,11 +235,23 @@ def main() -> int:
     else:
         csv_path, summary_path = default_plan_paths(log_dir, source_root)
 
+    planned_dir_count = 0
     if args.dry_run:
-        parquets = list(iter_source_parquets(source_root))
-        empty_records = detect_empty_files(source_root)
+        parquet_paths = list(iter_source_parquets(source_root))
+        empty_records = detect_empty_files(parquet_paths)
         write_csv(empty_records, csv_path)
-        write_summary(summary_path, scanned=len(parquets), empty=len(empty_records), deleted=0)
+        if args.prune_empty_dirs:
+            pretend_removed = _normalize_paths(rec.path for rec in empty_records)
+            prunable_dirs = find_empty_server_dirs(source_root, pretend_removed)
+            planned_dir_count = len(prunable_dirs)
+            print(f"Dry-run would prune {planned_dir_count} empty server directories.")
+        write_summary(
+            summary_path,
+            scanned=len(parquet_paths),
+            empty=len(empty_records),
+            deleted=0,
+            pruned_dirs=planned_dir_count,
+        )
         print(f"Dry-run complete. Empty files: {len(empty_records)}")
         print(f"CSV plan:     {csv_path}")
         print(f"Summary JSON: {summary_path}")
@@ -210,7 +261,17 @@ def main() -> int:
     if args.yes_delete:
         plan_records = load_plan(csv_path)
         removed = delete_files(plan_records)
-        write_summary(summary_path, scanned=len(plan_records), empty=len(plan_records), deleted=len(removed))
+        pruned_dir_paths: List[Path] = []
+        if args.prune_empty_dirs:
+            pruned_dir_paths = prune_empty_server_dirs(source_root)
+            print(f"Removed {len(pruned_dir_paths)} empty server directories.")
+        write_summary(
+            summary_path,
+            scanned=len(plan_records),
+            empty=len(plan_records),
+            deleted=len(removed),
+            pruned_dirs=len(pruned_dir_paths),
+        )
         print(f"Deleted {len(removed)} files (plan entries: {len(plan_records)})")
 
     return 0
