@@ -4,8 +4,8 @@ Identify and optionally delete empty source data_<uuid>.parquet files.
 
 Typical workflow:
   1. Run with --dry-run to record every zero-row parquet and review the CSV plan.
-  2. Once satisfied, rerun with --yes-delete. Add --prune-empty-dirs to remove
-     any server=* directories that would become empty once those files are gone.
+  2. Once satisfied, rerun with --yes-delete. Add --prune-empty-dirs to record and
+     remove any server=* directories that would become empty once those files are gone.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Optional, Set
+from typing import Iterable, List, Optional, Set, Tuple
 
 import pyarrow.parquet as pq
 
@@ -118,11 +118,20 @@ def detect_empty_files(parquet_paths: Iterable[Path]) -> List[EmptyParquet]:
     return records
 
 
-def default_plan_paths(log_dir: Path, source_root: Path) -> tuple[Path, Path]:
-    base = source_root.resolve().name
-    csv_path = log_dir / f"{base}_empty_sources.csv"
-    summary_path = log_dir / f"{base}_empty_sources_summary.json"
-    return csv_path, summary_path
+def resolve_plan_paths(
+    log_dir: Path, source_root: Path, plan_file: Optional[Path]
+) -> Tuple[Path, Path, Path, Path]:
+    if plan_file:
+        csv_path = plan_file.expanduser().resolve()
+        stem = csv_path.stem
+    else:
+        source_base = source_root.resolve().name
+        stem = f"{source_base}_empty_sources"
+        csv_path = (log_dir / f"{stem}.csv").resolve()
+    summary_path = log_dir / f"{stem}_summary.json"
+    dir_plan_path = log_dir / f"{stem}_dirs_planned.csv"
+    dir_deleted_path = log_dir / f"{stem}_dirs_deleted.csv"
+    return csv_path, summary_path, dir_plan_path, dir_deleted_path
 
 
 def write_csv(records: List[EmptyParquet], csv_path: Path) -> None:
@@ -132,6 +141,15 @@ def write_csv(records: List[EmptyParquet], csv_path: Path) -> None:
         writer.writerow(["uuid", "server", "path", "size_bytes", "row_count"])
         for rec in records:
             writer.writerow([rec.uuid, rec.server, str(rec.path), rec.size_bytes, rec.row_count])
+
+
+def write_dir_plan(paths: List[Path], dest: Path) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with dest.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["server", "path"])
+        for path in paths:
+            writer.writerow([find_server_name(path), str(path)])
 
 
 def write_summary(
@@ -189,7 +207,9 @@ def _normalize_paths(paths: Iterable[Path]) -> Set[Path]:
     return {p.resolve() for p in paths}
 
 
-def find_empty_server_dirs(source_root: Path, pretend_removed: Optional[Set[Path]] = None) -> List[Path]:
+def find_empty_server_dirs(
+    source_root: Path, pretend_removed: Optional[Set[Path]] = None
+) -> List[Path]:
     pretend = pretend_removed or set()
     empty_dirs: List[Path] = []
     for server_dir in sorted(source_root.glob("server=*")):
@@ -227,13 +247,11 @@ def main() -> int:
     if not args.dry_run and not args.yes_delete:
         error("Specify at least one of --dry-run or --yes-delete")
     if args.prune_empty_dirs and not args.yes_delete:
-        print("NOTE: --prune-empty-dirs only takes effect when --yes-delete is provided.")
+        print("NOTE: Directory pruning is preview-only because --yes-delete was omitted.")
 
-    if args.plan_file:
-        csv_path = args.plan_file.expanduser().resolve()
-        summary_path = log_dir / f"{csv_path.stem}_summary.json"
-    else:
-        csv_path, summary_path = default_plan_paths(log_dir, source_root)
+    csv_path, summary_path, dir_plan_path, dir_deleted_path = resolve_plan_paths(
+        log_dir, source_root, args.plan_file
+    )
 
     planned_dir_count = 0
     if args.dry_run:
@@ -244,7 +262,9 @@ def main() -> int:
             pretend_removed = _normalize_paths(rec.path for rec in empty_records)
             prunable_dirs = find_empty_server_dirs(source_root, pretend_removed)
             planned_dir_count = len(prunable_dirs)
+            write_dir_plan(prunable_dirs, dir_plan_path)
             print(f"Dry-run would prune {planned_dir_count} empty server directories.")
+            print(f"Directory plan: {dir_plan_path}")
         write_summary(
             summary_path,
             scanned=len(parquet_paths),
@@ -264,7 +284,9 @@ def main() -> int:
         pruned_dir_paths: List[Path] = []
         if args.prune_empty_dirs:
             pruned_dir_paths = prune_empty_server_dirs(source_root)
+            write_dir_plan(pruned_dir_paths, dir_deleted_path)
             print(f"Removed {len(pruned_dir_paths)} empty server directories.")
+            print(f"Directory removal log: {dir_deleted_path}")
         write_summary(
             summary_path,
             scanned=len(plan_records),
