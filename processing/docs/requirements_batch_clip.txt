@@ -1,5 +1,5 @@
 clip @ git+https://github.com/openai/CLIP.git@dcba3cb2e2827b402d2701e7e1c7d9fed8a20ef1
-filelock==3.18.0
+filelock==3.20.3
 fsspec==2025.3.2
 ftfy==6.3.1
 jinja2==3.1.6
