@@ -19,7 +19,7 @@ Usage:
 Examples:
     # BioCLIP (ViT-B/16, 512-dim) via preset
     python make_txt_embedding.py \\
-        --names-path  txt_emb_species.json \\
+        --names-path  txt_emb_bioclip.json \\
         --out-path    txt_emb_bioclip.npy \\
         --preset      bioclip \\
         --batch-size  16384
