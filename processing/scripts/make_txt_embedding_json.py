@@ -4,6 +4,9 @@ Generate txt_emb_species.json from TreeOfLife-200M catalog data.
 
 This script creates a JSON file for species embeddings by:
 - Filtering catalog to only entries with non-null kingdom and non-null species
+- Removing rows where any taxonomic rank looks like a CSV-parsing leak
+  (ISO-8601 timestamp or the literal string 'true' / 'false'); disable with
+  --no-corruption-filter to reproduce the pre-v2 upstream behavior
 - For each remaining unique taxonomy, collecting all available common names
 - Preferring English common names from GBIF VernacularNames.tsv (from GBIF Backbone Taxonomy), falling back to any language
 - Sorting by taxonomy and outputting in [[taxonomy_array], common_name] format
@@ -22,6 +25,12 @@ import polars as pl
 import json
 import argparse
 from pathlib import Path
+
+# Regex that matches the two CSV-parsing leak patterns observed in TOL-200M
+# catalogs (kingdom slot occasionally contains an ISO-8601 timestamp or a
+# Boolean literal that bled in from an adjacent column).
+CORRUPTION_PATTERN = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}|^(?i:true|false)$"
+TAXONOMIC_RANKS = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
 
 def load_vernacular_names(vernacular_path: str) -> tuple[set, set]:
     """Load and return sets of vernacular names from GBIF's TSV file."""
@@ -78,21 +87,43 @@ def select_best_common_name_from_list(names_list, english_names: set, all_names:
     return ""
 
 
-def process_catalog_to_embeddings(catalog_path: str, english_names: set, all_names: set, output_path: str):
+def drop_corrupted_rows(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
+    """Drop rows where any taxonomic rank matches CORRUPTION_PATTERN.
+
+    Returns the filtered DataFrame and the number of rows dropped.
+    """
+    n_before = len(df)
+    # Build an OR-mask across all 7 ranks. A rank that's null contributes False.
+    mask = pl.lit(False)
+    for rank in TAXONOMIC_RANKS:
+        mask = mask | (
+            pl.col(rank).is_not_null() & pl.col(rank).str.contains(CORRUPTION_PATTERN)
+        )
+    df = df.filter(~mask)
+    return df, n_before - len(df)
+
+
+def process_catalog_to_embeddings(catalog_path: str, english_names: set, all_names: set, output_path: str, apply_corruption_filter: bool = True):
     """Process catalog data into embeddings JSON format."""
     print(f"Loading catalog from: {catalog_path}")
-    
-    # Load catalog  
+
+    # Load catalog
     df_catalog = pl.read_parquet(catalog_path)
     print(f"\tTotal catalog entries: {len(df_catalog)}")
-    
+
     # Filter to only keep entries with non-null kingdom AND species
     df_filtered = df_catalog.filter(
-        (pl.col("kingdom").is_not_null()) & 
+        (pl.col("kingdom").is_not_null()) &
         (pl.col("species").is_not_null())
     )
     print(f"\tAfter null kingdom/species filtering: {len(df_filtered)}")
-    
+
+    # Drop rows whose taxonomic ranks contain CSV-parsing leaks (ISO-8601
+    # timestamps or boolean literals). Off via --no-corruption-filter.
+    if apply_corruption_filter:
+        df_filtered, n_dropped = drop_corrupted_rows(df_filtered)
+        print(f"\tCorruption filter dropped: {n_dropped} rows")
+
     # Get all unique taxonomies with their common names from the catalog
     df_grouped = (
         df_filtered
@@ -188,25 +219,39 @@ def main():
         default="txt_emb_species.json",
         help="Output JSON file path"
     )
-    
+
+    parser.add_argument(
+        "--no-corruption-filter",
+        action="store_true",
+        help="Disable the ISO-8601 / boolean corruption filter on taxonomic "
+             "ranks (reproduces the BioCLIP 2 upstream behavior)."
+    )
+
     args = parser.parse_args()
-    
+
     # Check input files exist
     if not Path(args.catalog_path).exists():
         raise FileNotFoundError(f"Catalog file not found: {args.catalog_path}")
     if not Path(args.vernacular_path).exists():
         raise FileNotFoundError(f"VernacularNames file not found: {args.vernacular_path}")
-    
+
     print(f"Catalog: {args.catalog_path}")
     print(f"Vernacular names: {args.vernacular_path}")
     print(f"Output: {args.output}")
-    
+    print(f"Corruption filter: {'OFF' if args.no_corruption_filter else 'ON'}")
+
     # Load vernacular names
     english_names, all_names = load_vernacular_names(args.vernacular_path)
-    
+
     # Process catalog, generate JSON
-    entry_count = process_catalog_to_embeddings(args.catalog_path, english_names, all_names, args.output)
-    
+    entry_count = process_catalog_to_embeddings(
+        args.catalog_path,
+        english_names,
+        all_names,
+        args.output,
+        apply_corruption_filter=not args.no_corruption_filter,
+    )
+
     print(f"\nEmbeddings JSON complete.")
 
 
