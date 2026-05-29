@@ -6,6 +6,9 @@ Generalized for any open_clip-compatible model accessible via Hugging Face Hub. 
 --preset for the common BioCLIP variants, or pass --model / --tokenizer / --embed-dim
 to point at any other model (e.g. BioCAP, future BioCLIP releases).
 
+Note: lower --batch-size for larger models (e.g. bioclip-2.5-vith14) or smaller
+GPUs to avoid CUDA OOM. 
+
 Usage:
     python make_txt_embedding.py \\
         --names-path  NAMES.json \\
@@ -14,27 +17,27 @@ Usage:
         [--batch-size N]
 
 Examples:
-    # BioCLIP 2 (ViT-L-14, 768-dim) via preset
+    # BioCLIP (ViT-B/16, 512-dim) via preset
     python make_txt_embedding.py \\
-        --names-path  txt_emb_bioclip-2.json \\
-        --out-path    txt_emb_bioclip-2.npy \\
-        --preset      bioclip-2 \\
+        --names-path  txt_emb_species.json \\
+        --out-path    txt_emb_bioclip.npy \\
+        --preset      bioclip \\
         --batch-size  16384
 
-    # BioCLIP 2.5 Huge (ViT-H-14, 1024-dim) via preset
+    # BioCLIP 2.5 Huge (ViT-H/14, 1024-dim) via preset
     python make_txt_embedding.py \\
         --names-path  txt_emb_bioclip-2.5-vith14.json \\
         --out-path    txt_emb_bioclip-2.5-vith14.npy \\
         --preset      bioclip-2.5-vith14 \\
         --batch-size  16384
 
-    # Arbitrary model via explicit args (e.g. BioCAP or a future release)
+    # Arbitrary model via explicit args (e.g. a future release)
     python make_txt_embedding.py \\
         --names-path  txt_emb_species.json \\
         --out-path    txt_emb_custom.npy \\
         --model       hf-hub:imageomics/<model-id> \\
         --tokenizer   hf-hub:imageomics/<model-id> \\
-        --embed-dim   1024 \\
+        --embed-dim   <model-dim> \\
         --batch-size  8192
 """
 import argparse
@@ -58,15 +61,25 @@ logger = logging.getLogger()
 # Known model presets: (model_str, tokenizer_str, embed_dim).
 # --preset is a shorthand; passing --model / --tokenizer / --embed-dim overrides.
 PRESETS = {
+    "bioclip": {
+        "model":     "hf-hub:imageomics/bioclip",
+        "tokenizer": "hf-hub:imageomics/bioclip",                    # ViT-B/16
+        "embed_dim": 512,
+    },
     "bioclip-2": {
         "model":     "hf-hub:imageomics/bioclip-2",
-        "tokenizer": "ViT-L-14",
+        "tokenizer": "hf-hub:imageomics/bioclip-2",                  # ViT-L/14
         "embed_dim": 768,
     },
     "bioclip-2.5-vith14": {
         "model":     "hf-hub:imageomics/bioclip-2.5-vith14",
-        "tokenizer": "hf-hub:imageomics/bioclip-2.5-vith14",
+        "tokenizer": "hf-hub:imageomics/bioclip-2.5-vith14",         # ViT-H/14
         "embed_dim": 1024,
+    },
+    "biocap": {
+        "model":     "hf-hub:imageomics/biocap",
+        "tokenizer": "hf-hub:imageomics/biocap",                     # ViT-B/16
+        "embed_dim": 512,
     },
 }
 
@@ -130,13 +143,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--names-path", help="Path to the taxonomic names file (e.g., txt_emb_species.json).", required=True)
     parser.add_argument("--out-path", help="Path to the output file.", required=True)
-    parser.add_argument("--batch-size", help="Batch size.", default=2**14, type=int)
+    parser.add_argument("--batch-size", default=2**14, type=int,
+        help="Outer batch size (taxa per step). Lower for larger models / smaller "
+             "GPUs to avoid CUDA OOM.")
     parser.add_argument("--preset", choices=sorted(PRESETS.keys()),
-        help="Shorthand for a known model. Overrides --model / --tokenizer / "
-             "--embed-dim when set.")
+        help="Shorthand for a known model (see PRESETS). Overrides --model / "
+             "--tokenizer / --embed-dim when set.")
     parser.add_argument("--model",
-        help="open_clip model identifier (e.g. 'hf-hub:imageomics/bioclip-2'). "
-             "Required unless --preset is given.")
+        help="open_clip model identifier (e.g. 'hf-hub:imageomics/bioclip-2', "
+             "'hf-hub:imageomics/biocap'). Required unless --preset is given.")
     parser.add_argument("--tokenizer",
         help="open_clip tokenizer identifier. Defaults to --model when not set.")
     parser.add_argument("--embed-dim", type=int,
