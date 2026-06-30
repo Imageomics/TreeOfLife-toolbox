@@ -19,7 +19,7 @@ from TreeOfLife_toolbox.main.config import Config
 from TreeOfLife_toolbox.main.filters import FilterRegister, SparkFilterToolBase
 from TreeOfLife_toolbox.main.runners import MPIRunnerTool, RunnerRegister
 from TreeOfLife_toolbox.main.schedulers import DefaultScheduler, SchedulerRegister
-from TreeOfLife_toolbox.tol_hdf5_to_wds.utils import (
+from TreeOfLife_toolbox.tol_hybrid_to_wds.utils import (
     convert_webp_to_jpeg,
     generate_text_files,
     init_shard_writer,
@@ -30,7 +30,7 @@ def _sanitize_path_column(column):
     return func.regexp_replace(column, "^file:", "")
 
 
-@FilterRegister("tol_hdf5_to_wds")
+@FilterRegister("tol_hybrid_to_wds")
 class TolHDF5ToWDSFilter(SparkFilterToolBase):
     """
     Builds shard-level metadata derived from the parquet_to_hdf5 outputs.
@@ -38,8 +38,8 @@ class TolHDF5ToWDSFilter(SparkFilterToolBase):
 
     def __init__(self, cfg: Config):
         super().__init__(cfg)
-        self.filter_name = "tol_hdf5_to_wds"
-        tool_cfg = self.config.get("tol_hdf5_to_wds", {}) or {}
+        self.filter_name = "tol_hybrid_to_wds"
+        tool_cfg = self.config.get("tol_hybrid_to_wds", {}) or {}
         self.shard_size = int(tool_cfg.get("shard_size", 10000))
         self.shard_limit = int(tool_cfg.get("shard_limit", 0))
         self.metadata_glob = tool_cfg.get("metadata_glob", "**/*_metadata.parquet")
@@ -53,7 +53,7 @@ class TolHDF5ToWDSFilter(SparkFilterToolBase):
         )
 
         if self.shard_size <= 0:
-            raise ValueError("tol_hdf5_to_wds.shard_size must be greater than zero")
+            raise ValueError("tol_hybrid_to_wds.shard_size must be greater than zero")
 
         os.makedirs(self.shard_metadata_dir, exist_ok=True)
 
@@ -124,6 +124,15 @@ class TolHDF5ToWDSFilter(SparkFilterToolBase):
             ]
             taxa_df = taxa_df.select(*taxa_columns)
             metadata_df = metadata_df.join(taxa_df, on="uuid", how="left")
+
+            # Drop a row only when every taxonomy field is null or blank, so no degenerate text sidecars are ever written. Robust to incomplete upstream taxonomy and a no-op on inputs that are already complete.
+            taxonomy_fields = [c for c in taxa_columns if c != "uuid"]
+            all_empty = None
+            for col_name in taxonomy_fields:
+                blank = func.col(col_name).isNull() | (func.trim(func.col(col_name)) == "")
+                all_empty = blank if all_empty is None else (all_empty & blank)
+            if all_empty is not None:
+                metadata_df = metadata_df.filter(~all_empty)
 
         if self.include_sources:
             metadata_df = metadata_df.filter(func.col("source").isin(self.include_sources))
@@ -260,7 +269,7 @@ class TolHDF5ToWDSFilter(SparkFilterToolBase):
                     func.col("shard_id"),
                 ),
             )
-            .withColumn("server_name", func.lit("tol_hdf5_to_wds"))
+            .withColumn("server_name", func.lit("tol_hybrid_to_wds"))
             .withColumn("partition_id", func.col("shard_id"))
         )
 
@@ -269,7 +278,7 @@ class TolHDF5ToWDSFilter(SparkFilterToolBase):
         self.logger.info("Prepared %d shards", total_shards)
 
 
-@SchedulerRegister("tol_hdf5_to_wds")
+@SchedulerRegister("tol_hybrid_to_wds")
 class TolHDF5ToWDSScheduler(DefaultScheduler):
     """
     Scheduler that treats each metadata shard as an independent work unit.
@@ -277,12 +286,12 @@ class TolHDF5ToWDSScheduler(DefaultScheduler):
 
     def __init__(self, cfg: Config):
         super().__init__(cfg)
-        self.filter_name = "tol_hdf5_to_wds"
+        self.filter_name = "tol_hybrid_to_wds"
         # Scheduling keys only. The data columns (metadata_path, shard_id) ride along in the filter table and are picked up by the runner's data_scheme; including them here duplicates them into schedule.csv and collides on the runner's merge.
         self.scheme = ["server_name", "partition_id"]
 
 
-@RunnerRegister("tol_hdf5_to_wds")
+@RunnerRegister("tol_hybrid_to_wds")
 class TolHDF5ToWDSRunner(MPIRunnerTool):
     """
     Converts shard metadata into WebDataset tar archives.
@@ -290,11 +299,11 @@ class TolHDF5ToWDSRunner(MPIRunnerTool):
 
     def __init__(self, cfg: Config):
         super().__init__(cfg)
-        self.filter_name = "tol_hdf5_to_wds"
+        self.filter_name = "tol_hybrid_to_wds"
         self.data_scheme = ["metadata_path", "shard_id", "server_name", "partition_id"]
         self.verification_scheme = ["server_name", "partition_id"]
 
-        params = self.config.get("tol_hdf5_to_wds", {}) or {}
+        params = self.config.get("tol_hybrid_to_wds", {}) or {}
         self.tar_output_root = params.get("tar_output_root") or os.path.join(
             self.tools_path, self.filter_name, "tar_dataset"
         )

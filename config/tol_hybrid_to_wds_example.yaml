@@ -30,7 +30,7 @@ output_structure:
   inner_checkpoint_file: "inner_checkpoint.yaml"
   tools_folder: "tools"
 
-tol_hdf5_to_wds:
+tol_hybrid_to_wds:
   shard_size: 10000
   shard_limit: 0
   metadata_glob: "**/*_metadata.parquet"

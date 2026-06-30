@@ -1,4 +1,4 @@
-# tol_hdf5_to_wds
+# tol_hybrid_to_wds
 
 Converts the hybrid Tree of Life dataset (HDF5 images + Parquet metadata) into
 [WebDataset](https://github.com/webdataset/webdataset) `.tar` shards that mirror
@@ -8,7 +8,7 @@ the taxonomy-rich text sidecars produced by the previous Parquet-based pipeline.
 
 1. **Filter**: Scans the converted dataset for `*_metadata.parquet` files,
    enriches each row with the matching `*_images.h5` path, and writes shard-sized
-   parquet partitions under `tools/tol_hdf5_to_wds/shard_metadata`.
+   parquet partitions under `tools/tol_hybrid_to_wds/shard_metadata`.
 2. **Scheduler**: Assigns shard identifiers to MPI ranks and writes
    `schedule.csv` for the toolbox runner scripts.
 3. **Runner**: For every scheduled shard, loads the shard metadata, reads
@@ -18,10 +18,10 @@ the taxonomy-rich text sidecars produced by the previous Parquet-based pipeline.
 
 ## Configuration highlights
 
-Add a `tol_hdf5_to_wds` block to the standard toolbox config template:
+Add a `tol_hybrid_to_wds` block to the standard toolbox config template:
 
 ```yaml
-tol_hdf5_to_wds:
+tol_hybrid_to_wds:
   shard_size: 10000                 # rows per shard
   shard_limit: 0                    # optional cap, 0 disables
   metadata_glob: "**/*_metadata.parquet"
@@ -46,8 +46,8 @@ the derived file path, or a `path` column (configurable via
 Run the tool via the standard CLI:
 
 ```bash
-CONFIG_PATH=config/tol_hdf5_to_wds_example.yaml \
-tree_of_life_toolbox config/tol_hdf5_to_wds_example.yaml tol_hdf5_to_wds
+CONFIG_PATH=config/tol_hybrid_to_wds_example.yaml \
+tree_of_life_toolbox config/tol_hybrid_to_wds_example.yaml tol_hybrid_to_wds
 ```
 
 Each shard sample contains the JPEG plus ten text prompts:

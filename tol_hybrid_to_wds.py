@@ -3,7 +3,7 @@
 Single-node converter from the hybrid Tree of Life HDF5/metadata dataset to WebDataset shards.
 
 Example:
-    python tol_hdf5_to_wds.py \
+    python tol_hybrid_to_wds.py \
         --input-root /fs/ess/PAS2136/TreeOfLife/data \
         --lookup /fs/scratch/PAS2136/TreeOfLife_test-wds/lookup-tables/all/hdf5_lookup.parquet \
         --taxa-glob "/fs/ess/PAS2136/TreeOfLife/annotations/resolved_taxa/*/*.parquet" \
@@ -26,13 +26,13 @@ import polars as pl
 import webdataset as wds
 
 try:
-    from TreeOfLife_toolbox.tol_hdf5_to_wds.utils import (
+    from TreeOfLife_toolbox.tol_hybrid_to_wds.utils import (
         convert_webp_to_jpeg,
         generate_text_files,
     )
 except ImportError as exc:  # pragma: no cover - script usage only
     raise SystemExit(
-        "Unable to import TreeOfLife_toolbox.tol_hdf5_to_wds.utils. "
+        "Unable to import TreeOfLife_toolbox.tol_hybrid_to_wds.utils. "
         "Please install the toolbox package (pip install -e .) before running this script."
     ) from exc
 
@@ -91,7 +91,7 @@ def setup_logger(level: str) -> logging.Logger:
         level=getattr(logging, level.upper()),
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
-    return logging.getLogger("tol_hdf5_to_wds")
+    return logging.getLogger("tol_hybrid_to_wds")
 
 
 def discover_metadata_files(root: str, pattern: str) -> List[str]:
@@ -217,6 +217,16 @@ def merge_metadata(
         ).drop("hdf5_path_right")
     if taxa_lazy is not None:
         joined = joined.join(taxa_lazy, on="uuid", how="left")
+        # Drop a row only when every taxonomy field is null or blank, so no degenerate text sidecars are ever written. Robust to incomplete upstream taxonomy and a no-op on inputs that are already complete.
+        tax_cols = [c for c in [
+            "scientific_name", "common_name", "provided_common_name", "kingdom",
+            "phylum", "class", "order", "family", "genus", "species",
+        ] if c in joined.collect_schema().names()]
+        if tax_cols:
+            all_blank = pl.all_horizontal(
+                [pl.col(c).is_null() | (pl.col(c).str.strip_chars() == "") for c in tax_cols]
+            )
+            joined = joined.filter(~all_blank)
     joined = joined.unique(subset=["uuid"])
     result = joined.sort(["hdf5_path", "uuid"]).collect(streaming=True)
     logger.info("Collected %s metadata rows", result.height)

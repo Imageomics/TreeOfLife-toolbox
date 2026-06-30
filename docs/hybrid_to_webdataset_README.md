@@ -4,7 +4,7 @@ This guide covers packaging the Tree of Life dataset, stored in the hybrid
 format of WebP images in HDF5 (`*_images.h5`) alongside Parquet metadata
 (`*_metadata.parquet`), into [WebDataset](https://github.com/webdataset/webdataset)
 `.tar` shards for model training. It is implemented by the
-[`tol_hdf5_to_wds`](../src/TreeOfLife_toolbox/tol_hdf5_to_wds/README.md) tool.
+[`tol_hybrid_to_wds`](../src/TreeOfLife_toolbox/tol_hybrid_to_wds/README.md) tool.
 
 ## What it produces
 
@@ -55,7 +55,7 @@ Edit `scripts/tools_*.slurm` to load your cluster's MPI and Spark modules, targe
 Best for testing or modest UUID lists. No Spark/MPI required:
 
 ```bash
-python tol_hdf5_to_wds.py \
+python tol_hybrid_to_wds.py \
   --input-root /path/to/hybrid_dataset \
   --lookup     /path/to/uuid_lookup.parquet \
   --taxa-glob  "/path/to/resolved_taxa/source=*/*.parquet" \
@@ -70,23 +70,23 @@ python tol_hdf5_to_wds.py \
 
 The toolbox runner reads one config and submits the whole pipeline (Spark
 filter, scheduler, MPI workers, verifier) with the right Slurm dependencies.
-Start from [`config/tol_hdf5_to_wds_example.yaml`](../config/tol_hdf5_to_wds_example.yaml)
+Start from [`config/tol_hybrid_to_wds_example.yaml`](../config/tol_hybrid_to_wds_example.yaml)
 and set, for your run:
 
 - `account` and `tools_parameters` (nodes, workers, CPUs) for your allocation;
 - `path_to_input` (the hybrid dataset root) and `path_to_output_folder` (the
   toolbox working directory);
-- in the `tol_hdf5_to_wds` block: `tar_output_root`, `resize_size`, `taxa_glob`
+- in the `tol_hybrid_to_wds` block: `tar_output_root`, `resize_size`, `taxa_glob`
   (required for the taxonomy/common-name prompts), and `lookup_table_path`
   (a parquet/CSV with a `uuid` column selecting which images to convert).
 
-See the [tool README](../src/TreeOfLife_toolbox/tol_hdf5_to_wds/README.md) for
+See the [tool README](../src/TreeOfLife_toolbox/tol_hybrid_to_wds/README.md) for
 the full key reference.
 
 Then run the pipeline with a single command:
 
 ```bash
-tree_of_life_toolbox config/tol_hdf5_to_wds_my_run.yaml tol_hdf5_to_wds
+tree_of_life_toolbox config/tol_hybrid_to_wds_my_run.yaml tol_hybrid_to_wds
 ```
 
 The runner reads the config, exports the environment it implies (account,
