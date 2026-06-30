@@ -1,0 +1,49 @@
+account: "PAS2136"
+
+# Input directory should point to the root of the parquet_to_hdf5 outputs.
+path_to_input: "/fs/ess/PAS2136/TreeOfLife_HDF5/converted"
+# Working directory for toolbox artifacts (logs, checkpoints, etc.).
+path_to_output_folder: "/fs/scratch/PAS2136/TreeOfLife_hdf5_to_wds"
+
+tools_parameters:
+  num_workers: 8
+  max_nodes: 2
+  workers_per_node: 4
+  cpu_per_worker: 32
+  threshold_size: 224
+  new_resize_size: 720
+
+scripts:
+  tools_submitter: "scripts/tools_submit.sh"
+  tools_filter_script: "scripts/tools_filter.slurm"
+  tools_scheduling_script: "scripts/tools_scheduler.slurm"
+  tools_worker_script: "scripts/tools_worker.slurm"
+  tools_verification_script: "scripts/tools_verifier.slurm"
+
+output_structure:
+  urls_folder: "urls"
+  logs_folder: "logs"
+  images_folder: "images"
+  schedules_folder: "schedules"
+  profiles_table: "profiles.csv"
+  ignored_table: "ignored.csv"
+  inner_checkpoint_file: "inner_checkpoint.yaml"
+  tools_folder: "tools"
+
+tol_hdf5_to_wds:
+  shard_size: 10000
+  shard_limit: 0
+  metadata_glob: "**/*_metadata.parquet"
+  include_sources: []
+  include_servers: []
+  tar_output_root: "/fs/ess/PAS2136/TreeOfLife_WDS/shards"
+  resize_size: 224
+  shard_prefix: "shard"
+  runner_timeout_seconds: 3600
+  # Lookup selecting which images to convert: a parquet/CSV with a `uuid`
+  # column. The `.h5` path is auto-derived as the sibling `*_images.h5` of each
+  # `*_metadata.parquet`, so no path column is required (an optional `hdf5_path`
+  # or `h5_file` column overrides it).
+  lookup_table_path: "/fs/ess/PAS2136/TreeOfLife/lookups/subset.parquet"
+  # Resolved-taxonomy parquet, joined by `uuid`; required for the text prompts.
+  taxa_glob: "/fs/ess/PAS2136/TreeOfLife/annotations/resolved_taxa/source=*/*.parquet"
