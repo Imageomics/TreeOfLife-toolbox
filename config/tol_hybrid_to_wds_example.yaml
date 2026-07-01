@@ -40,10 +40,7 @@ tol_hybrid_to_wds:
   resize_size: 224
   shard_prefix: "shard"
   runner_timeout_seconds: 3600
-  # Lookup selecting which images to convert: a parquet/CSV with a `uuid`
-  # column. The `.h5` path is auto-derived as the sibling `*_images.h5` of each
-  # `*_metadata.parquet`, so no path column is required (an optional `hdf5_path`
-  # or `h5_file` column overrides it).
+  # Lookup selecting which images to convert: a parquet/CSV with a `uuid` column. The `.h5` path is auto-derived as the sibling `*_images.h5` of each `*_metadata.parquet`, so no path column is required (an optional `hdf5_path` or `h5_file` column overrides it).
   lookup_table_path: "/fs/ess/PAS2136/TreeOfLife/lookups/subset.parquet"
   # Resolved-taxonomy parquet, joined by `uuid`; required for the text prompts.
   taxa_glob: "/fs/ess/PAS2136/TreeOfLife/annotations/resolved_taxa/source=*/*.parquet"
