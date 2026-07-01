@@ -20,9 +20,11 @@ All three are joined by `uuid`:
 
 1. **Hybrid dataset**: the root holding `*_images.h5` (WebP bytes under an `/images/<uuid>` group) and the paired `*_metadata.parquet`.
 2. **Resolved taxonomy**: Parquet providing `scientific_name`, `common_name`, and the `kingdom` through `species` ranks per `uuid` (the text-label source).
-3. **Lookup table**: Parquet/CSV with at least a `uuid` column; only listed UUIDs are converted. The `.h5` path is auto-derived as the sibling `*_images.h5` of each `*_metadata.parquet`, so no path column is needed; an optional `hdf5_path` (or `h5_file`) column overrides it.
+3. **Lookup table**: Parquet/CSV with at least a `uuid` column; only listed UUIDs are converted. The `.h5` path is auto-derived as the sibling `*_images.h5` of each `*_metadata.parquet`, so no path column is needed; an optional `hdf5_path` (or `h5_file`) column overrides it. To build a lookup for a UUID subset from a converted dataset, use [`generate_hdf5_lookup.py`](../src/TreeOfLife_toolbox/tol_hybrid_to_wds/scripts/generate_hdf5_lookup.py).
 
 ## Prerequisites
+
+The pipeline runs on a cluster through Slurm, using Spark for the filter stage and MPI for the workers. This holds for any run size: for a small or low-resource job you scale the pipeline down through the config (see below) rather than switching to a different code path, so Spark and MPI are always required.
 
 Install the toolbox (see the top-level [installation instructions](../README.md#installation-instructions)):
 
@@ -30,7 +32,7 @@ Install the toolbox (see the top-level [installation instructions](../README.md#
 pip install -e .
 ```
 
-Option A (single node) needs only the Python dependencies that installs. Option B (distributed) runs on a cluster, and its Slurm scripts encode site-specific choices you must adapt:
+The Slurm scripts encode site-specific choices you must adapt:
 
 - An **MPI** implementation with `mpi4py` installed against it. The workers run under MPI; if `mpi4py` is built against a different MPI than the one loaded at runtime, they fail to load it.
 - A **Spark** runtime for the filter stage.
@@ -38,22 +40,7 @@ Option A (single node) needs only the Python dependencies that installs. Option 
 
 Edit `scripts/tools_*.slurm` to load your cluster's MPI and Spark modules, target your partition, and activate your environment. As committed they target one cluster (OSC Cardinal) as a worked example to replace with your own.
 
-## Option A: single node (quick / small subsets)
-
-Best for testing or modest UUID lists. No Spark/MPI required:
-
-```bash
-python tol_hybrid_to_wds.py \
-  --input-root /path/to/hybrid_dataset \
-  --lookup     /path/to/uuid_lookup.parquet \
-  --taxa-glob  "/path/to/resolved_taxa/source=*/*.parquet" \
-  --output-dir /path/to/wds \
-  --resize 224 --shard-size 10000
-```
-
-(Generate a `uuid`-to-`h5` lookup for a UUID subset with [`generate_hdf5_lookup.py`](../generate_hdf5_lookup.py).)
-
-## Option B: distributed (full dataset, Slurm)
+## Running the pipeline
 
 The toolbox runner reads one config and submits the whole pipeline (Spark filter, scheduler, MPI workers, verifier) with the right Slurm dependencies. Start from [`config/tol_hybrid_to_wds_example.yaml`](../config/tol_hybrid_to_wds_example.yaml) and set, for your run:
 
@@ -61,7 +48,7 @@ The toolbox runner reads one config and submits the whole pipeline (Spark filter
 - `path_to_input` (the hybrid dataset root) and `path_to_output_folder` (the toolbox working directory);
 - in the `tol_hybrid_to_wds` block: `tar_output_root`, `resize_size`, `taxa_glob` (required for the taxonomy/common-name prompts), and `lookup_table_path` (a parquet/CSV with a `uuid` column selecting which images to convert).
 
-See the [tool README](../src/TreeOfLife_toolbox/tol_hybrid_to_wds/README.md) for the full key reference.
+For a small or low-resource run, scale `tools_parameters` down (for example `num_workers: 1`, `max_nodes: 1`, `workers_per_node: 1`); the execution path is identical. See the [tool README](../src/TreeOfLife_toolbox/tol_hybrid_to_wds/README.md) for the full key reference.
 
 Then run the pipeline with a single command:
 
@@ -73,4 +60,4 @@ The runner reads the config, exports the environment it implies (account, node/w
 
 ## Validating output
 
-`validate_tars.py` checks shard integrity, and `wds_taxoncom_audit.py` audits the taxonomy/common-name prompts across shards.
+[`validate_tars.py`](../src/TreeOfLife_toolbox/tol_hybrid_to_wds/scripts/validate_tars.py) checks shard integrity: that every tar is readable and each sample carries the JPEG and all ten text sidecars.
