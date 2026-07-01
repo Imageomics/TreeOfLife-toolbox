@@ -37,3 +37,10 @@ tree_of_life_toolbox config/tol_hybrid_to_wds_example.yaml tol_hybrid_to_wds
 ```
 
 Each shard sample contains the JPEG plus ten text prompts: `scientific_name.txt`, `taxonomic_name.txt`, `sci.txt`, `taxon.txt`, `taxonTag.txt`, `common_name.txt`, `com.txt`, `sci_com.txt`, `taxon_com.txt`, and `taxonTag_com.txt`. Files ending in `_com` append the resolved common name (or `Unknown` when no vernacular exists) to their prompt text.
+
+## Companion scripts
+
+Standalone helpers live in [`scripts/`](scripts/) beside this tool:
+
+- `generate_hdf5_lookup.py` builds a `uuid`-to-`h5` lookup table (Parquet) from a converted dataset, optionally sampling a subset, for use as `lookup_table_path`.
+- `validate_tars.py` checks output shard integrity: every tar is readable and each sample carries the JPEG and all ten text sidecars.
