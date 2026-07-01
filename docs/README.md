@@ -24,3 +24,9 @@ The dataset is divided into the following components, each with its own download
 4. Monitor progress using the provided utilities.
 
 Each download component has its own README with detailed instructions. Click on the links above to access specific guidance for accessing images from each data provider.
+
+# Create webdataset
+
+Instructions for packaging the dataset into [WebDataset](https://github.com/webdataset/webdataset) `.tar` shards for model training, by storage format:
+
+- [Hybrid format (HDF5 + Parquet)](hybrid_to_webdataset_README.md) - create WebDataset shards from the hybrid HDF5-image + Parquet-metadata storage format.

@@ -30,12 +30,14 @@ dependencies = [
     "cramjam",
     "cython",
     "fsspec",
+    "h5py",
     "inflate64",
     "mpi4py",
     "multivolumefile",
     "open-clip-torch",
     "opencv-python",
     "pandas",
+    "polars",
     "pathspec",
     "pillow",
     "polars",
@@ -55,6 +57,7 @@ dependencies = [
     "tqdm",
     "trove-classifiers",
     "typing-extensions",
+    "webdataset",
     "wheel"
 ]
 

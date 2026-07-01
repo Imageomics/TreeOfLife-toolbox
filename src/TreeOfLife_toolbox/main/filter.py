@@ -46,3 +46,10 @@ if __name__ == "__main__":
         checkpoint["filtering_completed"] = True
     else:
         logger.info("Filtering was already completed")
+
+    # Spark's driver JVM does not reliably exit after the context is stopped, which leaves the batch job lingering until its walltime even though the work is done. All output is already written and checkpointed, so stop the session and terminate immediately.
+    try:
+        tool_filter.spark.stop()
+    except Exception:
+        pass
+    os._exit(0)
