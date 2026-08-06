@@ -81,7 +81,7 @@ python-multipart==0.0.20
 pytorchwildlife @ git+https://github.com/NetZissou/CameraTraps.git@9ed37181f68373e6d4bb28e718bf8020b7c784a2
 pytz==2025.2
 pyyaml==6.0.2
-requests==2.32.3
+requests==2.32.4
 requests-toolbelt==1.0.0
 rich==14.0.0
 roboflow==1.1.63
