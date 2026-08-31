@@ -1,0 +1,27 @@
+# BioCLIP 2 (ViT-L/14, 768-dim) - HDF5 batch embedding config
+# for hpc-inference open_clip_embed (--input_type hdf5).
+#
+# Same pipeline as embed_bioclip_2_5.yaml, different weights. ViT-L is lighter,
+# so a larger batch and full worker count keep the GPU fed (On H100, this model tends to
+# be data-loader bound rather than compute bound).
+#
+# Outputs RAW float32 embeddings.
+
+models:
+  bioclip_2:
+    name: hf-hub:imageomics/bioclip-2
+    pretrained: null
+
+batch_size: 128
+num_workers: 24
+prefetch_factor: 16
+
+group_name: images        # HDF5 group holding uuid -> image bytes
+color_mode: RGB
+validate_images: false
+
+evenly_distribute: true   # LPT file assignment across ranks (by file size)
+stagger: false
+
+max_rows_per_file: 500000
+out_prefix: bioclip_2     # output column will be emb_bioclip_2

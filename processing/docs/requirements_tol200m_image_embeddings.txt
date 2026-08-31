@@ -1,0 +1,10 @@
+# Requirements for processing/tol200m_image_embeddings (see its README.md).
+# hpc-inference is not on PyPI; install from GitHub:
+#   uv pip install "hpc-inference[openclip] @ git+https://github.com/Imageomics/hpc-inference.git"
+# It brings torch / open-clip-torch / pyarrow / h5py and the rest of the
+# embedding-stage stack. The extras below cover profiling and standardization.
+nvidia-ml-py
+duckdb
+pyarrow
+numpy
+h5py
