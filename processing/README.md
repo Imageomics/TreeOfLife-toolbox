@@ -25,6 +25,10 @@ Be sure to set appropriate `BASE_DIR` variables in `scripts/mongo/` and `scripts
 
 [BioCLIP 2 text embeddings of TreeOfLife-200M](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/txt_emb_species.npy) were generated with [`make_txt_embedding.py`](scripts/make_txt_embedding.py),  using the [`txt_emb_species.json`](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/txt_emb_species.json) to provide the species names. More information about the `JSON` is provided in the [TreeOfLife-200M `embeddings/README`](https://huggingface.co/datasets/imageomics/TreeOfLife-200M/blob/main/embeddings/README.md).
 
+## TreeOfLife-200M Image Embeddings
+
+The [`tol200m_image_embeddings/`](tol200m_image_embeddings) directory contains the SLURM jobs, configs, and standardization scripts used to produce the image-embedding configs of [TreeOfLife-200M-Embeddings](https://huggingface.co/datasets/imageomics/TreeOfLife-200M-Embeddings) (BioCLIP 2 and BioCLIP 2.5 Huge): batch embedding via the [hpc-inference](https://github.com/Imageomics/hpc-inference) package, then metadata join, taxonomic ordering, normalization (where applicable), float16 casting, and contract parquet writing. See its `README.md` for the pipeline and placeholder conventions.
+
 ## Webdataset Construction
 
 The requirements and config files for taking the TreeOfLife structured dataset and putting it in webdataset format are `requirements_tol2webdataset.txt` and `tol2webdataset_full_224.yaml`, respectively. The code for this is run through `scripts/t2w_submit.sh` using the `tol2webdataset` scripts and modules.
