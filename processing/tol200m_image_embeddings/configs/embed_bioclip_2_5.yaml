@@ -1,0 +1,30 @@
+# BioCLIP 2.5 Huge (ViT-H/14, 1024-dim) - HDF5 batch embedding config
+# for hpc-inference open_clip_embed (--input_type hdf5).
+#
+# Compute-bound model: the GPU forward pass dominates, so worker/prefetch tuning
+# matters less than for smaller models. Sized for 1x H100 94GB w/ 26 CPU cores.
+#
+# NOTE: the original production run additionally used bf16 autocast with
+# in-pipeline L2-normalization and float16 storage (features not yet in the
+# released hpc-inference package). This config runs the released fp32 path and
+# outputs RAW float32 embeddings; normalization + float16 casting happen in the
+# standardization step (see ../README.md). bf16-vs-fp32 cosine: 0.9998 mean.
+
+models:
+  bioclip_2_5:
+    name: hf-hub:imageomics/bioclip-2.5-vith14
+    pretrained: null
+
+batch_size: 32
+num_workers: 24
+prefetch_factor: 8
+
+group_name: images        # HDF5 group holding uuid -> image bytes
+color_mode: RGB
+validate_images: false
+
+evenly_distribute: true   # LPT file assignment across ranks (by file size)
+stagger: false
+
+max_rows_per_file: 500000
+out_prefix: bioclip_2_5   # output column will be emb_bioclip_2_5
