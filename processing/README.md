@@ -27,7 +27,7 @@ Be sure to set appropriate `BASE_DIR` variables in `scripts/mongo/` and `scripts
 
 ## TreeOfLife-200M Image Embeddings
 
-The [`tol200m_image_embeddings/`](tol200m_image_embeddings) directory contains the SLURM jobs, configs, and standardization scripts used to produce the image-embedding configs of [TreeOfLife-200M-Embeddings](https://huggingface.co/datasets/imageomics/TreeOfLife-200M-Embeddings) (BioCLIP 2 and BioCLIP 2.5 Huge): batch embedding via the [hpc-inference](https://github.com/Imageomics/hpc-inference) package, then metadata join, taxonomic ordering, normalization (where applicable), float16 casting, and contract parquet writing. See its `README.md` for the pipeline and placeholder conventions.
+The [`tol200m_image_embeddings/`](tol200m_image_embeddings) directory contains the SLURM jobs, configs, and standardization scripts used to produce the image-embedding configs of [TreeOfLife-200M-Embeddings](https://huggingface.co/datasets/imageomics/TreeOfLife-200M-Embeddings) (BioCLIP 2 and BioCLIP 2.5 Huge): batch embedding via the [hpc-inference](https://github.com/Imageomics/hpc-inference) package, then metadata join, taxonomic ordering, normalization (where applicable), float16 casting, and contract parquet writing. See [`tol200m_image_embeddings/README.md`](tol200m_image_embeddings/README.md) for the pipeline and placeholder conventions.
 
 ## Webdataset Construction
 
