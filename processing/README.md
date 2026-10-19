@@ -28,3 +28,7 @@ Be sure to set appropriate `BASE_DIR` variables in `scripts/mongo/` and `scripts
 ## Webdataset Construction
 
 The requirements and config files for taking the TreeOfLife structured dataset and putting it in webdataset format are `requirements_tol2webdataset.txt` and `tol2webdataset_full_224.yaml`, respectively. The code for this is run through `scripts/t2w_submit.sh` using the `tol2webdataset` scripts and modules.
+
+## Lance Construction
+
+[`src/wds2lance/`](src/wds2lance) converts TreeOfLife webdataset shards into [Lance](https://lancedb.github.io/lance/) datasets, one column per tar member, byte for byte, for training BioCLIP 2. Its requirements are in `requirements_wds2lance.txt` and its Slurm template is `scripts/wds2lance/wds2lance.slurm`; see its [README](src/wds2lance/README.md).
