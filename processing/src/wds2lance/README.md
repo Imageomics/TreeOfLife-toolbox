@@ -29,17 +29,17 @@ Install `processing/requirements_wds2lance.txt`, then:
 python wds_to_lance.py <split-dir> <out-dir>/train.lance --workers 32
 ```
 
-Shards are converted in parallel, `--workers` at a time (default: one per CPU, at most 32). The converter prints a
+Shards are converted in parallel, `--workers` at a time (default: one per CPU, at most 32). The converter logs a
 line per shard, in tar order, and a summary at the end:
 
 ```text
-Converting 3 tar files from wds/train into lance/train.lance with 32 workers
-[1/3] shard-000000.tar: 1,000 rows
-[2/3] shard-000001.tar: empty, skipped
-[3/3] shard-000002.tar: 1,000 rows
-Done in 0:00:02: 2,000 rows from 3 tar files (1 empty)
-  dataset:  lance/train.lance
-  manifest: lance/train.lance.manifest.json (the training loader reads it; keep it next to the dataset)
+2026-10-19 10:00:00,001 - INFO - Converting 3 tar files from wds/train into lance/train.lance with 32 workers
+2026-10-19 10:00:01,402 - INFO - [1/3] shard-000000.tar: 1,000 rows
+2026-10-19 10:00:01,403 - INFO - [2/3] shard-000001.tar: empty, skipped
+2026-10-19 10:00:01,405 - INFO - [3/3] shard-000002.tar: 1,000 rows
+2026-10-19 10:00:01,622 - INFO - Done in 0:00:02: 2,000 rows from 3 tar files (1 empty)
+2026-10-19 10:00:01,622 - INFO - Dataset: lance/train.lance
+2026-10-19 10:00:01,622 - INFO - Manifest: lance/train.lance.manifest.json (read by the training loader; keep it next to the dataset)
 ```
 
 If a run is interrupted or stops with an error, delete the output and run it again. `python wds_to_lance.py --help`
