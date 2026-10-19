@@ -31,4 +31,4 @@ The requirements and config files for taking the TreeOfLife structured dataset a
 
 ## Lance Construction
 
-[`src/wds2lance/`](src/wds2lance) converts TreeOfLife webdataset shards into [Lance](https://lancedb.github.io/lance/) datasets, one column per tar member, byte for byte, for training BioCLIP 2. Its requirements are in `requirements_wds2lance.txt` and its Slurm template is `scripts/wds2lance/wds2lance.slurm`; see its [README](src/wds2lance/README.md).
+[`src/wds2lance/`](src/wds2lance) converts TreeOfLife webdataset shards into [Lance](https://lancedb.github.io/lance/) datasets. Its requirements are in `requirements_wds2lance.txt` and its Slurm template is `scripts/wds2lance/wds2lance.slurm`; see its [README](src/wds2lance/README.md).

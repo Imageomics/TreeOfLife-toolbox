@@ -1,11 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name wds2lance
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
 #SBATCH --mem=96G
 #SBATCH --time=01:00:00
-#SBATCH --account=YOUR_ACCOUNT
 
 # Converts each split's webdataset shards into <OUT_DIR>/<split>.lance (delete it first to convert again).
 
@@ -16,7 +12,7 @@ BASE_DIR=""  # Set your base path for data
 WDS_DIR="$BASE_DIR/path/to/webdataset"  # contains <split>/*.tar
 OUT_DIR="$BASE_DIR/path/to/lance"
 SPLITS="train val"
-CONVERTER="${REPO_ROOT}/src/wds2lance/wds_to_lance.py"  # REPO_ROOT is set by scripts/submit_slurm.sh
+CONVERTER="${REPO_ROOT}/src/wds2lance/wds_to_lance.py"
 
 set -euo pipefail
 for split in $SPLITS; do
