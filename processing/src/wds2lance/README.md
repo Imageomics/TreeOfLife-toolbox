@@ -1,65 +1,28 @@
-# WebDataset to Lance Converter
+# WebDataset To Lance Converter
 
-Converts a split of TreeOfLife webdataset tar shards into a [Lance](https://lancedb.github.io/lance/) dataset for
-training BioCLIP 2. Each sample becomes one row and each tar member one column, with the bytes unchanged.
+This script converts `TreeOfLife` webdataset shards into a `Lance` dataset for BioCLIP 2 training, using a pool of worker processes.
 
-## Input
+## How to run
 
-A directory of `*.tar` shards. Every sample must have the 11 members of the TreeOfLife-10M layout: `jpg` plus
-`scientific_name`, `common_name`, `taxonomic_name`, `sci`, `com`, `taxon`, `sci_com`, `taxon_com`, `taxonTag` and
-`taxonTag_com` (`.txt`). Otherwise the conversion stops with an error naming the shard, the sample key and the
-missing or unexpected members. Empty tar files are skipped. Shards written by [`tol2webdataset`](../tol2webdataset)
-have only 6 of these members and are not supported.
+1. Install the packages in [requirements_wds2lance.txt](../../requirements_wds2lance.txt).
+2. Run [wds_to_lance.py](wds_to_lance.py) with the directory of the split's `*.tar` shards and the Lance dataset to create (e.g. `<out-dir>/train.lance`) as arguments. On Slurm, set the environment and data paths in [wds2lance.slurm](../../scripts/wds2lance/wds2lance.slurm) and submit it from `processing/` with `REPO_ROOT=$PWD sbatch --account=<account> --cpus-per-task=32 scripts/wds2lance/wds2lance.slurm`.
+3. Wait for the conversion to be completed (it logs a line per shard and a summary at the end). If it stops with an error, delete the output and do step 2 again.
+4. Train BioCLIP 2 by pointing `--train-data` and `--val-data` at the `.lance` paths and keeping `--dataset-type auto`. Keep `<output>.manifest.json` next to the dataset, the training loader reads it.
 
-## Output
+Additional arguments for [wds_to_lance.py](wds_to_lance.py):
 
-- `<output>.lance`: one column per member (`sci.txt` becomes `sci`), plus `uuid` (the sample key), `source_shard`
-  and `source_index`. Rows are in tar order.
-- `<output>.lance.manifest.json`: the row count and each shard's rows and offset. The training loader needs it, so
-  keep it next to the dataset.
+- `--workers` - number of shards converted at the same time (default: one per available CPU, at most 32).
 
-To train BioCLIP 2 from it, point `--train-data` and `--val-data` at the `.lance` paths and keep `--dataset-type auto`
-(the default), so the LAION replay data in `--continual-data` stays on tar shards.
+## How it works
 
-## Run
+The job is completed in 3 steps (performed by running `wds_to_lance.py`):
 
-Install `processing/requirements_wds2lance.txt`, then:
+1. `conversion` - a pool of worker processes converts each tar shard into one Lance fragment: one row per sample and one column per tar member, bytes unchanged (`sci.txt` becomes column `sci`), plus `uuid` (the sample key), `source_shard` and `source_index`. Every sample must have the 11 members of the TreeOfLife-10M layout (`jpg` and ten `.txt` files), otherwise the conversion stops with an error; empty tar files are skipped. Shards written by [tol2webdataset](../tol2webdataset) have only 6 of these members and are not supported.
+2. `commit` - the fragments are committed in tar order as one Lance dataset at the output path.
+3. `manifest` - `<output>.manifest.json` is written next to the dataset with the row count and each shard's rows and offset, which the BioCLIP 2 training loader reads.
 
-```bash
-python wds_to_lance.py <split-dir> <out-dir>/train.lance --workers 32
-```
+### File structure
 
-Shards are converted in parallel, `--workers` at a time (default: one per available CPU, at most 32). The
-converter logs a line per shard, in tar order, and a summary at the end:
-
-```text
-2026-10-19 10:00:00,001 - INFO - Converting 3 tar files from wds/train into lance/train.lance with 32 workers
-2026-10-19 10:00:01,402 - INFO - [1/3] shard-000000.tar: 1,000 rows
-2026-10-19 10:00:01,403 - INFO - [2/3] shard-000001.tar: empty, skipped
-2026-10-19 10:00:01,405 - INFO - [3/3] shard-000002.tar: 1,000 rows
-2026-10-19 10:00:01,622 - INFO - Done in 0:00:02: 2,000 rows from 3 tar files (1 empty)
-2026-10-19 10:00:01,622 - INFO - Dataset: lance/train.lance
-2026-10-19 10:00:01,622 - INFO - Manifest: lance/train.lance.manifest.json (read by the training loader; keep it next to the dataset)
-```
-
-If a run is interrupted or stops with an error, delete the output and run it again. `python wds_to_lance.py --help`
-shows the options and an example.
-
-On Slurm, set `PATH/TO/ENVIRONMENT`, `BASE_DIR` and the data paths in
-[`scripts/wds2lance/wds2lance.slurm`](../../scripts/wds2lance/wds2lance.slurm), then submit it from `processing/` with
-your account and the number of CPUs to use:
-
-```bash
-REPO_ROOT=$PWD sbatch --account=<account> --cpus-per-task=32 scripts/wds2lance/wds2lance.slurm
-```
-
-## Code
-
-- [`wds_to_lance.py`](wds_to_lance.py): the command line. It finds the shards, converts them in parallel and reports
-  progress, then commits the dataset and writes the manifest.
-- [`lance_writer.py`](lance_writer.py): the schema, writing one shard as one Lance fragment, the commit and the
-  manifest.
-- [`tar_reader.py`](tar_reader.py): reads the samples out of one tar shard.
-
-`wds_to_lance.py` imports `lance_writer`, which imports `tar_reader`, by plain module name, so keep all three files
-in the same directory.
+- [wds_to_lance.py](wds_to_lance.py) - main file that is used to launch the whole process.
+- [lance_writer.py](lance_writer.py) - script that writes one shard as one Lance fragment, commits the dataset and writes the manifest.
+- [tar_reader.py](tar_reader.py) - script that reads the samples out of one tar shard.
