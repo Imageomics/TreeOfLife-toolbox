@@ -31,7 +31,7 @@ def main():
     )
     parser.add_argument("split_dir", help="Directory holding the split's *.tar shards.")
     parser.add_argument("output", help="Lance dataset to create, e.g. <out-dir>/train.lance.")
-    parser.add_argument("--workers", type=int, default=min(32, os.cpu_count()),
+    parser.add_argument("--workers", type=int, default=min(32, len(os.sched_getaffinity(0))),
                         help="Shards to convert at the same time (default: %(default)s).")
     args = parser.parse_args()
 

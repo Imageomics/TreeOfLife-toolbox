@@ -29,8 +29,8 @@ Install `processing/requirements_wds2lance.txt`, then:
 python wds_to_lance.py <split-dir> <out-dir>/train.lance --workers 32
 ```
 
-Shards are converted in parallel, `--workers` at a time (default: one per CPU, at most 32). The converter logs a
-line per shard, in tar order, and a summary at the end:
+Shards are converted in parallel, `--workers` at a time (default: one per available CPU, at most 32). The
+converter logs a line per shard, in tar order, and a summary at the end:
 
 ```text
 2026-10-19 10:00:00,001 - INFO - Converting 3 tar files from wds/train into lance/train.lance with 32 workers
@@ -45,11 +45,12 @@ line per shard, in tar order, and a summary at the end:
 If a run is interrupted or stops with an error, delete the output and run it again. `python wds_to_lance.py --help`
 shows the options and an example.
 
-On Slurm, set `YOUR_ACCOUNT`, `PATH/TO/ENVIRONMENT`, `BASE_DIR` and the data paths in
-[`scripts/wds2lance/wds2lance.slurm`](../../scripts/wds2lance/wds2lance.slurm), then submit it from `processing/`:
+On Slurm, set `PATH/TO/ENVIRONMENT`, `BASE_DIR` and the data paths in
+[`scripts/wds2lance/wds2lance.slurm`](../../scripts/wds2lance/wds2lance.slurm), then submit it from `processing/` with
+your account and the number of CPUs to use:
 
 ```bash
-scripts/submit_slurm.sh scripts/wds2lance/wds2lance.slurm
+REPO_ROOT=$PWD sbatch --account=<account> --cpus-per-task=32 scripts/wds2lance/wds2lance.slurm
 ```
 
 ## Code

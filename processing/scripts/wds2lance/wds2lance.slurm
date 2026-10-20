@@ -16,5 +16,5 @@ CONVERTER="${REPO_ROOT}/src/wds2lance/wds_to_lance.py"
 
 set -euo pipefail
 for split in $SPLITS; do
-    python "$CONVERTER" "$WDS_DIR/$split" "$OUT_DIR/$split.lance" --workers "$SLURM_CPUS_PER_TASK"
+    python "$CONVERTER" "$WDS_DIR/$split" "$OUT_DIR/$split.lance"
 done
