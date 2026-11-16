@@ -41,6 +41,8 @@ def main():
     tars = sorted(glob.glob(os.path.join(args.split_dir, "*.tar")))
     if not tars:
         raise SystemExit(f"No .tar files in {args.split_dir}")
+    if os.path.exists(output + ".manifest.json"):
+        os.remove(output + ".manifest.json")  # left by a dataset that was deleted
 
     logging.info(f"Converting {len(tars)} tar files from {args.split_dir} into {output} "
                  f"with {args.workers} workers")
